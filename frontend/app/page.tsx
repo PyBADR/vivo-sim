@@ -576,7 +576,7 @@ export default function HomePage() {
             transition={{ duration: 0.7 }}
           >
             <p className="text-body-lg text-ds-text-secondary leading-relaxed text-center">
-              Crisis leadership isn't about prediction—it's about preparation. VIVO SIM gives GCC
+              Crisis leadership isn&apos;t about prediction—it&apos;s about preparation. VIVO SIM gives GCC
               enterprises the confidence to act decisively in uncertain times. By rehearsing scenarios
               before they happen, decision-makers can identify vulnerabilities, align stakeholders,
               and execute with precision.
@@ -619,7 +619,7 @@ export default function HomePage() {
             <div className="ds-card p-14 lg:p-20 rounded-ds-xl text-center bg-gradient-to-br from-ds-surface to-ds-bg">
               <h2 className="text-h2 lg:text-h1 text-ds-text">Start Your Crisis Rehearsal</h2>
               <p className="text-body-lg text-ds-text-secondary mt-4 max-w-xl mx-auto">
-                Experience VIVO SIM's 8-stage pipeline. Model scenarios, see cascade effects, and brief leadership.
+                Experience VIVO SIM&apos;s 8-stage pipeline. Model scenarios, see cascade effects, and brief leadership.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
                 <Link href="/simulator" className="ds-btn-primary text-[15px] px-8 py-4">

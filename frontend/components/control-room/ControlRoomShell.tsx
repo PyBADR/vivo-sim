@@ -7,7 +7,7 @@ import { SituationFeed } from "./SituationFeed";
 import { WorldStatePanel } from "./WorldStatePanel";
 import { TimelinePanel } from "./TimelinePanel";
 import { BranchPanel } from "./BranchPanel";
-import { DecisionPanel } from "./DecisionPanel";
+import { DecisionPanel as LegacyDecisionPanel } from "./DecisionPanel";
 import { InterventionPanel } from "./InterventionPanel";
 import { IntelligenceBriefPanel } from "./IntelligenceBriefPanel";
 import { AnalystPanel } from "./AnalystPanel";
@@ -18,24 +18,44 @@ import { CrisisPresetSelector } from "./CrisisPresetSelector";
 import { StatusRail } from "./StatusRail";
 import { MetricStrip } from "./MetricStrip";
 
+/* ── Decision Intelligence Panels ── */
+import { ExecutiveBriefPanel } from "@/components/decision/ExecutiveBriefPanel";
+import { DecisionPanel } from "@/components/decision/DecisionPanel";
+import { ConfidencePanel } from "@/components/decision/ConfidencePanel";
+
+/* ── DI Hooks ── */
+import { useDecisionIntelligence } from "@/lib/hooks/useDecisionIntelligence";
+
+import type { CrisisAssessment } from "@/lib/types/crisis";
+import type { Lang } from "@/lib/types/i18n";
+
 export function ControlRoomShell() {
   const { state, runPipeline, topConfidence, completedStages } =
     useControlRoom();
-  const [crisisAssessment, setCrisisAssessment] = useState<any>(null);
+  const [crisisAssessment, setCrisisAssessment] = useState<CrisisAssessment | null>(null);
+  const {
+    bundle: diBundle,
+    loading: diLoading,
+    loadDecisionIntelligence,
+  } = useDecisionIntelligence();
+  const [lang] = useState<Lang>("en");
 
-  // Fetch crisis assessment after pipeline completes
+  // Fetch crisis assessment + decision intelligence after pipeline completes
   useEffect(() => {
     if (completedStages > 0 && completedStages === state.statuses.length) {
       fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/scenarios/crisis/packs/us-iran-gcc/assessment`
       )
         .then((res) => res.json())
-        .then((data) => setCrisisAssessment(data))
+        .then((data) => {
+          setCrisisAssessment(data);
+          loadDecisionIntelligence();
+        })
         .catch(() => {
           // Silent fail
         });
     }
-  }, [completedStages, state.statuses.length]);
+  }, [completedStages, state.statuses.length, loadDecisionIntelligence]);
 
   return (
     <div className="min-h-screen bg-[#060a14] text-white antialiased">
@@ -44,7 +64,7 @@ export function ControlRoomShell() {
         <header className="mb-5 flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-4 backdrop-blur-sm">
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-blue-400/80">
-              VIVO SIM — Control Room
+              VIVO SIM — Decision Intelligence
             </p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight">
               Scenario Intelligence Console
@@ -106,18 +126,38 @@ export function ControlRoomShell() {
             />
           </main>
 
-          {/* Right Rail */}
+          {/* Right Rail — Decision Intelligence + Impact */}
           <aside className="col-span-12 space-y-4 lg:col-span-3">
-            <DecisionPanel decision={state.decision} />
+            {/* Decision Intelligence */}
+            <ExecutiveBriefPanel
+              narrative={diBundle?.executive_narrative}
+              assessment={crisisAssessment}
+              lang={lang}
+            />
+            <DecisionPanel
+              options={diBundle?.decision_options}
+              rankedActions={crisisAssessment?.ranked_actions}
+              lang={lang}
+            />
+            <ConfidencePanel
+              bands={diBundle?.confidence_bands}
+              overallConfidence={diBundle?.overall_confidence}
+              lang={lang}
+            />
+
+            {/* Legacy Panels */}
+            <LegacyDecisionPanel decision={state.decision} />
             <InterventionPanel
               simulation={state.simulation}
               selectedInterventionId={state.selectedInterventionId}
             />
             <IntelligenceBriefPanel brief={state.brief} />
             <AnalystPanel analysis={state.analysis} />
-            <AirportImpactPanel airports={crisisAssessment?.airport_impacts ?? []} />
-            <EnergyShockPanel energy={crisisAssessment?.energy_impact} />
-            <ECommerceImpactPanel ecommerce={crisisAssessment?.ecommerce_impact} />
+
+            {/* Crisis Impact */}
+            <AirportImpactPanel airports={crisisAssessment?.airport_impacts ?? []} lang={lang} />
+            <EnergyShockPanel energy={crisisAssessment?.energy_impact} lang={lang} />
+            <ECommerceImpactPanel ecommerce={crisisAssessment?.ecommerce_impact} lang={lang} />
           </aside>
         </div>
 
