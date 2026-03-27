@@ -1,0 +1,140 @@
+{
+  "scenario_id": "scenario_003",
+  "nodes": [
+    {
+      "id": "node_017",
+      "label": "شركة الاتصالات",
+      "label_en": "Telecom Company",
+      "type": "Organization",
+      "metadata": {"weight": 0.9, "x": 0, "y": 0}
+    },
+    {
+      "id": "node_018",
+      "label": "رفع الأسعار",
+      "label_en": "Price Increase",
+      "type": "Event",
+      "metadata": {"weight": 0.85, "x": -2, "y": -1}
+    },
+    {
+      "id": "node_019",
+      "label": "منطقة الخليج",
+      "label_en": "GCC Region",
+      "type": "Region",
+      "metadata": {"weight": 0.8, "x": -2, "y": 1}
+    },
+    {
+      "id": "node_020",
+      "label": "المشتركون",
+      "label_en": "Subscribers",
+      "type": "Person",
+      "metadata": {"weight": 0.75, "x": 1, "y": -2}
+    },
+    {
+      "id": "node_021",
+      "label": "جهة التنظيم CITC",
+      "label_en": "CITC Regulator",
+      "type": "Organization",
+      "metadata": {"weight": 0.7, "x": 2, "y": 1}
+    },
+    {
+      "id": "node_022",
+      "label": "حقوق المستهلك",
+      "label_en": "Consumer Rights",
+      "type": "Topic",
+      "metadata": {"weight": 0.65, "x": 3, "y": -1}
+    },
+    {
+      "id": "node_023",
+      "label": "الشركات المنافسة",
+      "label_en": "Competitors",
+      "type": "Organization",
+      "metadata": {"weight": 0.6, "x": 1, "y": 2}
+    },
+    {
+      "id": "node_024",
+      "label": "الخدمات الرقمية",
+      "label_en": "Digital Services",
+      "type": "Topic",
+      "metadata": {"weight": 0.55, "x": 3, "y": 1}
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_024",
+      "source": "node_017",
+      "target": "node_018",
+      "relation": "announces",
+      "weight": 0.85
+    },
+    {
+      "id": "edge_025",
+      "source": "node_018",
+      "target": "node_020",
+      "relation": "affects",
+      "weight": 0.85
+    },
+    {
+      "id": "edge_026",
+      "source": "node_020",
+      "target": "node_022",
+      "relation": "concerns",
+      "weight": 0.75
+    },
+    {
+      "id": "edge_027",
+      "source": "node_017",
+      "target": "node_021",
+      "relation": "regulated_by",
+      "weight": 0.8
+    },
+    {
+      "id": "edge_028",
+      "source": "node_018",
+      "relation": "regulated_by",
+      "target": "node_021",
+      "weight": 0.75
+    },
+    {
+      "id": "edge_029",
+      "source": "node_017",
+      "target": "node_023",
+      "relation": "competes_with",
+      "weight": 0.7
+    },
+    {
+      "id": "edge_030",
+      "source": "node_017",
+      "target": "node_024",
+      "relation": "provides",
+      "weight": 0.8
+    },
+    {
+      "id": "edge_031",
+      "source": "node_020",
+      "target": "node_017",
+      "relation": "uses",
+      "weight": 0.75
+    },
+    {
+      "id": "edge_032",
+      "source": "node_023",
+      "target": "node_020",
+      "relation": "offers_alternative",
+      "weight": 0.65
+    },
+    {
+      "id": "edge_033",
+      "source": "node_019",
+      "target": "node_017",
+      "relation": "operates_in",
+      "weight": 0.8
+    },
+    {
+      "id": "edge_034",
+      "source": "node_019",
+      "target": "node_020",
+      "relation": "contains",
+      "weight": 0.8
+    }
+  ]
+}

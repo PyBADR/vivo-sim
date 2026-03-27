@@ -1,0 +1,19 @@
+{
+  "id": "scenario_001",
+  "title": "Fuel Price Increase in Saudi Arabia",
+  "raw_text": "ارتفاع أسعار الوقود في السعودية بنسبة 10% وتأثير ذلك على تفاعل المستخدمين والرأي العام والقطاع الاقتصادي",
+  "language": "ar",
+  "country": "Saudi Arabia",
+  "category": "economy",
+  "created_at": "2026-03-26T00:00:00Z",
+  "entities": [
+    {"id": "ent_001", "name": "أسعار الوقود", "name_en": "Fuel Prices", "type": "Topic", "weight": 0.95},
+    {"id": "ent_002", "name": "المملكة العربية السعودية", "name_en": "Saudi Arabia", "type": "Region", "weight": 0.9},
+    {"id": "ent_003", "name": "وزارة الطاقة", "name_en": "Ministry of Energy", "type": "Organization", "weight": 0.85},
+    {"id": "ent_004", "name": "المواطنون السعوديون", "name_en": "Saudi Citizens", "type": "Person group", "weight": 0.8},
+    {"id": "ent_005", "name": "وسائل التواصل الاجتماعي", "name_en": "Social Media", "type": "Platform", "weight": 0.75},
+    {"id": "ent_006", "name": "التأثير الاقتصادي", "name_en": "Economic Impact", "type": "Topic", "weight": 0.7},
+    {"id": "ent_007", "name": "الرأي العام", "name_en": "Public Opinion", "type": "Topic", "weight": 0.65},
+    {"id": "ent_008", "name": "قطاع النقل", "name_en": "Transportation Sector", "type": "Organization", "weight": 0.6}
+  ]
+}

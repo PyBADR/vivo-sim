@@ -1,0 +1,147 @@
+{
+  "scenario_id": "scenario_001",
+  "nodes": [
+    {
+      "id": "node_001",
+      "label": "أسعار الوقود",
+      "label_en": "Fuel Prices",
+      "type": "Topic",
+      "metadata": {"weight": 0.95, "x": 0, "y": 0}
+    },
+    {
+      "id": "node_002",
+      "label": "المملكة العربية السعودية",
+      "label_en": "Saudi Arabia",
+      "type": "Region",
+      "metadata": {"weight": 0.9, "x": -2, "y": -1}
+    },
+    {
+      "id": "node_003",
+      "label": "وزارة الطاقة",
+      "label_en": "Ministry of Energy",
+      "type": "Organization",
+      "metadata": {"weight": 0.85, "x": -2, "y": 1}
+    },
+    {
+      "id": "node_004",
+      "label": "المواطنون السعوديون",
+      "label_en": "Saudi Citizens",
+      "type": "Person group",
+      "metadata": {"weight": 0.8, "x": 1, "y": -2}
+    },
+    {
+      "id": "node_005",
+      "label": "وسائل التواصل الاجتماعي",
+      "label_en": "Social Media",
+      "type": "Platform",
+      "metadata": {"weight": 0.75, "x": 2, "y": 0}
+    },
+    {
+      "id": "node_006",
+      "label": "التأثير الاقتصادي",
+      "label_en": "Economic Impact",
+      "type": "Topic",
+      "metadata": {"weight": 0.7, "x": 1, "y": 2}
+    },
+    {
+      "id": "node_007",
+      "label": "الرأي العام",
+      "label_en": "Public Opinion",
+      "type": "Topic",
+      "metadata": {"weight": 0.65, "x": 3, "y": 1}
+    },
+    {
+      "id": "node_008",
+      "label": "قطاع النقل",
+      "label_en": "Transportation Sector",
+      "type": "Organization",
+      "metadata": {"weight": 0.6, "x": 2, "y": -2}
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_001",
+      "source": "node_001",
+      "target": "node_002",
+      "relation": "associated_with",
+      "weight": 0.9
+    },
+    {
+      "id": "edge_002",
+      "source": "node_001",
+      "target": "node_003",
+      "relation": "regulated_by",
+      "weight": 0.85
+    },
+    {
+      "id": "edge_003",
+      "source": "node_001",
+      "target": "node_004",
+      "relation": "affects",
+      "weight": 0.85
+    },
+    {
+      "id": "edge_004",
+      "source": "node_001",
+      "target": "node_006",
+      "relation": "causes",
+      "weight": 0.8
+    },
+    {
+      "id": "edge_005",
+      "source": "node_004",
+      "target": "node_005",
+      "relation": "discusses_on",
+      "weight": 0.8
+    },
+    {
+      "id": "edge_006",
+      "source": "node_005",
+      "target": "node_007",
+      "relation": "amplifies",
+      "weight": 0.75
+    },
+    {
+      "id": "edge_007",
+      "source": "node_001",
+      "target": "node_008",
+      "relation": "impacts",
+      "weight": 0.75
+    },
+    {
+      "id": "edge_008",
+      "source": "node_006",
+      "target": "node_004",
+      "relation": "concerns",
+      "weight": 0.7
+    },
+    {
+      "id": "edge_009",
+      "source": "node_003",
+      "target": "node_001",
+      "relation": "sets",
+      "weight": 0.8
+    },
+    {
+      "id": "edge_010",
+      "source": "node_008",
+      "target": "node_004",
+      "relation": "employs",
+      "weight": 0.65
+    },
+    {
+      "id": "edge_011",
+      "source": "node_007",
+      "target": "node_003",
+      "relation": "influences",
+      "weight": 0.6
+    },
+    {
+      "id": "edge_012",
+      "source": "node_004",
+      "target": "node_007",
+      "relation": "shapes",
+      "weight": 0.7
+    }
+  ]
+}

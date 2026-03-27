@@ -1,0 +1,19 @@
+{
+  "id": "scenario_002",
+  "title": "Viral Hashtag in Kuwait About Economic Decision",
+  "raw_text": "هاشتاج فيروسي في الكويت حول قرار اقتصادي مثير للجدل وتفاعل المواطنين والمؤثرين عليه",
+  "language": "ar",
+  "country": "Kuwait",
+  "category": "social",
+  "created_at": "2026-03-26T00:00:00Z",
+  "entities": [
+    {"id": "ent_009", "name": "هاشتاج فيروسي", "name_en": "Viral Hashtag", "type": "Event", "weight": 0.9},
+    {"id": "ent_010", "name": "الكويت", "name_en": "Kuwait", "type": "Region", "weight": 0.85},
+    {"id": "ent_011", "name": "القرار الاقتصادي", "name_en": "Economic Decision", "type": "Topic", "weight": 0.8},
+    {"id": "ent_012", "name": "المواطنون الكويتيون", "name_en": "Kuwaiti Citizens", "type": "Person", "weight": 0.75},
+    {"id": "ent_013", "name": "المؤثرون الرقميون", "name_en": "Influencers", "type": "Person", "weight": 0.8},
+    {"id": "ent_014", "name": "وسائل الإعلام", "name_en": "Media Outlets", "type": "Organization", "weight": 0.7},
+    {"id": "ent_015", "name": "تويتر/إكس", "name_en": "Twitter/X", "type": "Platform", "weight": 0.85},
+    {"id": "ent_016", "name": "ردة الفعل العامة", "name_en": "Public Reaction", "type": "Topic", "weight": 0.65}
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "agents": [
+    {
+      "id": "agent_001",
+      "name": "أحمد السعودي",
+      "name_en": "Ahmed Al-Saudi",
+      "archetype": "saudi_citizen",
+      "influence_score": 0.4,
+      "behavior_type": "reactive",
+      "platform": "Twitter",
+      "sentiment": "neutral",
+      "activity_level": 0.6,
+      "avatar_color": "#3B82F6",
+      "bio": "مواطن سعودي عادي يهتم بالنفقات اليومية والتطورات الاقتصادية"
+    },
+    {
+      "id": "agent_002",
+      "name": "فاطمة الكويتية",
+      "name_en": "Fatima Al-Kuwaiti",
+      "archetype": "kuwaiti_citizen",
+      "influence_score": 0.35,
+      "behavior_type": "analytical",
+      "platform": "Twitter",
+      "sentiment": "neutral",
+      "activity_level": 0.55,
+      "avatar_color": "#10B981",
+      "bio": "مواطنة كويتية تحلل الأخبار والقرارات الاقتصادية بعمق"
+    },
+    {
+      "id": "agent_003",
+      "name": "سارة المؤثرة",
+      "name_en": "Sarah Al-Influencer",
+      "archetype": "influencer",
+      "influence_score": 0.85,
+      "behavior_type": "reactive",
+      "platform": "Twitter",
+      "sentiment": "neutral",
+      "activity_level": 0.9,
+      "avatar_color": "#F59E0B",
+      "bio": "مؤثرة رقمية شهيرة بآرائها الجريئة وتأثيرها على الرأي العام"
+    },
+    {
+      "id": "agent_004",
+      "name": "صحيفة الخليج اليوم",
+      "name_en": "Al-Khalij Today News",
+      "archetype": "media_account",
+      "influence_score": 0.75,
+      "behavior_type": "analytical",
+      "platform": "News",
+      "sentiment": "neutral",
+      "activity_level": 0.8,
+      "avatar_color": "#EF4444",
+      "bio": "حساب صحافي موثوق يغطي الأخبار الاقتصادية والاجتماعية في الخليج"
+    },
+    {
+      "id": "agent_005",
+      "name": "الناطق الرسمي الخليجي",
+      "name_en": "Gulf Official Spokesperson",
+      "archetype": "government_voice",
+      "influence_score": 0.9,
+      "behavior_type": "neutral",
+      "platform": "News",
+      "sentiment": "positive",
+      "activity_level": 0.5,
+      "avatar_color": "#8B5CF6",
+      "bio": "صوت حكومي رسمي يعلن القرارات والسياسات بشكل رسمي ومحترف"
+    },
+    {
+      "id": "agent_006",
+      "name": "محمد الشاب",
+      "name_en": "Mohammed Al-Youth",
+      "archetype": "youth_user",
+      "influence_score": 0.3,
+      "behavior_type": "reactive",
+      "platform": "WhatsApp",
+      "sentiment": "neutral",
+      "activity_level": 0.7,
+      "avatar_color": "#06B6D4",
+      "bio": "مستخدم شاب يشارك الأخبار والتعليقات مع مجموعاته على الواتس"
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "scenario_id": "scenario_002",
+  "nodes": [
+    {
+      "id": "node_009",
+      "label": "هاشتاج فيروسي",
+      "label_en": "Viral Hashtag",
+      "type": "Event",
+      "metadata": {"weight": 0.9, "x": 0, "y": 0}
+    },
+    {
+      "id": "node_010",
+      "label": "الكويت",
+      "label_en": "Kuwait",
+      "type": "Region",
+      "metadata": {"weight": 0.85, "x": -2, "y": -1}
+    },
+    {
+      "id": "node_011",
+      "label": "القرار الاقتصادي",
+      "label_en": "Economic Decision",
+      "type": "Topic",
+      "metadata": {"weight": 0.8, "x": -2, "y": 1}
+    },
+    {
+      "id": "node_012",
+      "label": "المواطنون الكويتيون",
+      "label_en": "Kuwaiti Citizens",
+      "type": "Person",
+      "metadata": {"weight": 0.75, "x": 1, "y": -2}
+    },
+    {
+      "id": "node_013",
+      "label": "المؤثرون الرقميون",
+      "label_en": "Influencers",
+      "type": "Person",
+      "metadata": {"weight": 0.8, "x": -1, "y": -2}
+    },
+    {
+      "id": "node_014",
+      "label": "وسائل الإعلام",
+      "label_en": "Media Outlets",
+      "type": "Organization",
+      "metadata": {"weight": 0.7, "x": 2, "y": 1}
+    },
+    {
+      "id": "node_015",
+      "label": "تويتر/إكس",
+      "label_en": "Twitter/X",
+      "type": "Platform",
+      "metadata": {"weight": 0.85, "x": 3, "y": 0}
+    },
+    {
+      "id": "node_016",
+      "label": "ردة الفعل العامة",
+      "label_en": "Public Reaction",
+      "type": "Topic",
+      "metadata": {"weight": 0.65, "x": 1, "y": 2}
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_013",
+      "source": "node_009",
+      "target": "node_011",
+      "relation": "responds_to",
+      "weight": 0.9
+    },
+    {
+      "id": "edge_014",
+      "source": "node_009",
+      "target": "node_015",
+      "relation": "trends_on",
+      "weight": 0.85
+    },
+    {
+      "id": "edge_015",
+      "source": "node_012",
+      "target": "node_009",
+      "relation": "participates_in",
+      "weight": 0.8
+    },
+    {
+      "id": "edge_016",
+      "source": "node_013",
+      "target": "node_009",
+      "relation": "amplifies",
+      "weight": 0.85
+    },
+    {
+      "id": "edge_017",
+      "source": "node_013",
+      "target": "node_012",
+      "relation": "influences",
+      "weight": 0.8
+    },
+    {
+      "id": "edge_018",
+      "source": "node_014",
+      "target": "node_009",
+      "relation": "reports_on",
+      "weight": 0.75
+    },
+    {
+      "id": "edge_019",
+      "source": "node_009",
+      "target": "node_016",
+      "relation": "generates",
+      "weight": 0.8
+    },
+    {
+      "id": "edge_020",
+      "source": "node_010",
+      "target": "node_012",
+      "relation": "contains",
+      "weight": 0.85
+    },
+    {
+      "id": "edge_021",
+      "source": "node_016",
+      "target": "node_014",
+      "relation": "motivates",
+      "weight": 0.7
+    },
+    {
+      "id": "edge_022",
+      "source": "node_011",
+      "target": "node_012",
+      "relation": "concerns",
+      "weight": 0.75
+    },
+    {
+      "id": "edge_023",
+      "source": "node_015",
+      "target": "node_013",
+      "relation": "provides_platform",
+      "weight": 0.8
+    }
+  ]
+}
