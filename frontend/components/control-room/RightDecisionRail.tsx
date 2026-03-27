@@ -22,7 +22,9 @@ const REC_LABEL: Record<string, keyof typeof crCopy.decision> = {
 
 export function RightDecisionRail() {
   const { state, dispatch } = useControlRoomStore();
-  const { coursesOfAction, selectedCOAId, lang, diBundle } = state;
+  const { coursesOfAction, selectedCOAId, lang, diBundle, playback } = state;
+
+  const isPlaybackActive = playback.status !== "idle";
 
   return (
     <aside
@@ -33,6 +35,17 @@ export function RightDecisionRail() {
       <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/30">
         {t(crCopy.decision.title, lang)}
       </div>
+
+      {/* ── Decision Delta (during playback) ── */}
+      {isPlaybackActive && (
+        <DecisionDelta
+          currentDecision={playback.currentDecision}
+          insurancePressure={playback.insurancePressure}
+          maxImpact={playback.maxImpact}
+          affectedCount={playback.affectedCount}
+          lang={lang}
+        />
+      )}
 
       {/* ── Overall Confidence ── */}
       {diBundle && (
@@ -179,6 +192,114 @@ function COACard({
           ? t(crCopy.decision.selected, lang)
           : t(crCopy.decision.selectCOA, lang)}
       </button>
+    </div>
+  );
+}
+
+/* ── Decision Delta (Playback) ── */
+
+const DECISION_STATE_CONFIG: Record<string, {
+  label: { en: string; ar: string };
+  color: string;
+  bg: string;
+  border: string;
+}> = {
+  hold: {
+    label: { en: "HOLD", ar: "انتظار" },
+    color: "text-white/40",
+    bg: "bg-white/[0.03]",
+    border: "border-white/[0.08]",
+  },
+  escalate: {
+    label: { en: "ESCALATE", ar: "تصعيد" },
+    color: "text-yellow-400",
+    bg: "bg-yellow-500/[0.06]",
+    border: "border-yellow-500/20",
+  },
+  activate_response: {
+    label: { en: "ACTIVATE RESPONSE", ar: "تفعيل الاستجابة" },
+    color: "text-amber-400",
+    bg: "bg-amber-500/[0.08]",
+    border: "border-amber-500/25",
+  },
+  emergency_protocol: {
+    label: { en: "EMERGENCY PROTOCOL", ar: "بروتوكول الطوارئ" },
+    color: "text-red-400",
+    bg: "bg-red-500/[0.08]",
+    border: "border-red-500/25",
+  },
+};
+
+function DecisionDelta({
+  currentDecision,
+  insurancePressure,
+  maxImpact,
+  affectedCount,
+  lang,
+}: {
+  currentDecision: string;
+  insurancePressure: number;
+  maxImpact: number;
+  affectedCount: number;
+  lang: "en" | "ar";
+}) {
+  const config = DECISION_STATE_CONFIG[currentDecision] ?? DECISION_STATE_CONFIG.hold;
+
+  return (
+    <div className={`rounded-xl border p-3 space-y-2.5 transition-all ${config.bg} ${config.border}`}>
+      {/* Decision State Badge */}
+      <div className="flex items-center justify-between">
+        <span className="text-[8px] uppercase tracking-[0.2em] text-white/30">
+          {lang === "ar" ? "حالة القرار" : "Decision State"}
+        </span>
+        <span className={`text-[10px] font-bold tracking-wider ${config.color}`}>
+          {lang === "ar" ? config.label.ar : config.label.en}
+        </span>
+      </div>
+
+      {/* Risk Gauge */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-[8px] text-white/30">
+          <span>{lang === "ar" ? "أعلى تأثير" : "Peak Impact"}</span>
+          <span className={config.color}>{Math.round(maxImpact * 100)}%</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-200"
+            style={{
+              width: `${Math.min(maxImpact * 100, 100)}%`,
+              backgroundColor: maxImpact >= 0.7 ? "#f87171" : maxImpact >= 0.4 ? "#fbbf24" : "#60a5fa",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Insurance Pressure */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-[8px] text-white/30">
+          <span>{lang === "ar" ? "ضغط التأمين" : "Insurance Pressure"}</span>
+          <span className={insurancePressure >= 0.5 ? "text-amber-400" : "text-white/50"}>
+            {Math.round(insurancePressure * 100)}%
+          </span>
+        </div>
+        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-200"
+            style={{
+              width: `${Math.min(insurancePressure * 100, 100)}%`,
+              backgroundColor: insurancePressure >= 0.6 ? "#f87171" : insurancePressure >= 0.3 ? "#fbbf24" : "#60a5fa",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Affected Count */}
+      <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
+        <span className="text-[8px] text-white/25">
+          {lang === "ar" ? "العقد المتأثرة" : "Affected Nodes"}
+        </span>
+        <span className="text-[11px] font-semibold text-white/60">{affectedCount}</span>
+      </div>
     </div>
   );
 }

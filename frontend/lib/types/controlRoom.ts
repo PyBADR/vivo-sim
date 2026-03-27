@@ -133,6 +133,35 @@ export interface CommandBarState {
   timestamp: string;
 }
 
+/* ── Playback State ── */
+
+export type PlaybackStatusType = "idle" | "playing" | "paused" | "complete";
+
+export interface PlaybackSnapshot {
+  status: PlaybackStatusType;
+  currentFrame: number;
+  totalFrames: number;
+  normalizedTime: number;
+  speed: number;
+  hoursElapsed: number;
+  affectedCount: number;
+  maxImpact: number;
+  currentDecision: "hold" | "escalate" | "activate_response" | "emergency_protocol";
+  insurancePressure: number;
+}
+
+/* ── Narrative Event (for timeline) ── */
+
+export interface NarrativeEventDisplay {
+  hour: number;
+  normalizedTime: number;
+  title: string;
+  description: string;
+  severity: "info" | "warning" | "critical";
+  relatedNodes: string[];
+  active: boolean;     // True if playback has passed this event
+}
+
 /* ── Aggregated Control Room State ── */
 
 export interface ControlRoomState {
@@ -169,6 +198,10 @@ export interface ControlRoomState {
   timeline: TimelineConfig;
   tasks: TimelineTask[];
 
+  /* Playback */
+  playback: PlaybackSnapshot;
+  narrativeEvents: NarrativeEventDisplay[];
+
   /* Data Sources */
   assessment: CrisisAssessment | null;
   diBundle: DecisionIntelligenceBundle | null;
@@ -187,4 +220,8 @@ export type ControlRoomAction =
   | { type: "TOGGLE_LAYER"; layerId: string }
   | { type: "SET_TIMELINE_HOUR"; hour: number }
   | { type: "SET_GLOBE_VIEW"; view: ControlRoomState["globeViewState"] }
-  | { type: "HYDRATE"; state: Partial<ControlRoomState> };
+  | { type: "HYDRATE"; state: Partial<ControlRoomState> }
+  /* Playback actions */
+  | { type: "SET_PLAYBACK"; playback: PlaybackSnapshot }
+  | { type: "SET_NARRATIVE_EVENTS"; events: NarrativeEventDisplay[] }
+  | { type: "UPDATE_PLAYBACK_FRAME"; normalizedTime: number; affectedCount: number; maxImpact: number; currentDecision: PlaybackSnapshot["currentDecision"]; insurancePressure: number; hoursElapsed: number };

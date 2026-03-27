@@ -21,6 +21,8 @@ import type {
   TimelineTask,
   IncidentCase,
   ThreatLevel,
+  PlaybackSnapshot,
+  NarrativeEventDisplay,
 } from "@/lib/types/controlRoom";
 import type { CrisisAssessment } from "@/lib/types/crisis";
 import type { DecisionIntelligenceBundle } from "@/lib/types/decision-intelligence";
@@ -85,6 +87,19 @@ export const initialControlRoomState: ControlRoomState = {
     currentHour: 0,
   },
   tasks: [],
+  playback: {
+    status: "idle",
+    currentFrame: 0,
+    totalFrames: 0,
+    normalizedTime: 0,
+    speed: 1.0,
+    hoursElapsed: 0,
+    affectedCount: 0,
+    maxImpact: 0,
+    currentDecision: "hold",
+    insurancePressure: 0,
+  },
+  narrativeEvents: [],
   assessment: null,
   diBundle: null,
 };
@@ -125,6 +140,34 @@ function controlRoomReducer(
       return hydrateFromDIBundle(state, action.bundle);
     case "HYDRATE":
       return { ...state, ...action.state };
+
+    /* Playback */
+    case "SET_PLAYBACK":
+      return { ...state, playback: action.playback };
+
+    case "SET_NARRATIVE_EVENTS":
+      return { ...state, narrativeEvents: action.events };
+
+    case "UPDATE_PLAYBACK_FRAME": {
+      const updatedNarrative = state.narrativeEvents.map((ev) => ({
+        ...ev,
+        active: action.normalizedTime >= ev.normalizedTime,
+      }));
+      return {
+        ...state,
+        playback: {
+          ...state.playback,
+          normalizedTime: action.normalizedTime,
+          hoursElapsed: action.hoursElapsed,
+          affectedCount: action.affectedCount,
+          maxImpact: action.maxImpact,
+          currentDecision: action.currentDecision,
+          insurancePressure: action.insurancePressure,
+        },
+        narrativeEvents: updatedNarrative,
+      };
+    }
+
     default:
       return state;
   }

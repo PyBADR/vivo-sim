@@ -5,20 +5,53 @@ import { useControlRoomStore } from "@/lib/state/controlRoomStore";
 import { crCopy } from "@/lib/config/control-room-copy";
 import { t } from "@/lib/utils/i18n";
 import type { GeoNode, GeoRoute } from "@/lib/types/controlRoom";
+import type {
+  PlaybackFrame,
+  NodeVisualState,
+  EdgeVisualState,
+  ImpactRing,
+} from "@/lib/visualization/propagationPlayback";
+import { DependencyArcsLayer } from "./layers/DependencyArcsLayer";
+import { ImpactRingsLayer } from "./layers/ImpactRingsLayer";
+import { AnimatedNodesLayer } from "./layers/AnimatedNodesLayer";
 
 /* ── CesiumJS: dynamic import (SSR=false) ── */
 
 let cesiumViewerModule: typeof import("@/lib/map/cesium/viewer") | null = null;
 let CesiumLib: typeof import("cesium") | null = null;
 
+/* ── Playback Frame Context ── */
+// Shared ref for the current playback frame (set by parent or playback engine)
+let _currentPlaybackFrame: PlaybackFrame | null = null;
+
+export function setCurrentPlaybackFrame(frame: PlaybackFrame | null) {
+  _currentPlaybackFrame = frame;
+}
+
 export function CenterGlobeStage() {
   const { state, dispatch } = useControlRoomStore();
-  const { geoNodes, geoRoutes, layers, selectedNodeId, lang, assessment } = state;
+  const { geoNodes, geoRoutes, layers, selectedNodeId, lang, assessment, playback } = state;
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<InstanceType<typeof import("cesium").Viewer> | null>(null);
   const entitiesRef = useRef<Map<string, unknown>>(new Map());
   const [cesiumReady, setCesiumReady] = useState(false);
   const [cesiumError, setCesiumError] = useState<string | null>(null);
+  const [currentFrame, setCurrentFrame] = useState<PlaybackFrame | null>(null);
+
+  // Poll for playback frame updates (60fps-safe)
+  useEffect(() => {
+    if (playback.status === "idle" && !_currentPlaybackFrame) return;
+
+    let rafId: number;
+    function poll() {
+      setCurrentFrame(_currentPlaybackFrame);
+      rafId = requestAnimationFrame(poll);
+    }
+    rafId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(rafId);
+  }, [playback.status]);
+
+  const isPlaybackActive = playback.status !== "idle" && currentFrame !== null;
 
   const visibleNodes = useMemo(() => {
     const visibleLayerTypes: string[] = [];
@@ -37,6 +70,15 @@ export function CenterGlobeStage() {
     return routeLayer?.visibility === "visible" ? geoRoutes : [];
   }, [geoRoutes, layers]);
 
+  // Node coordinate map for animated layers
+  const nodeCoords = useMemo(() => {
+    const map = new Map<string, { lat: number; lng: number }>();
+    for (const n of geoNodes) {
+      map.set(n.id, { lat: n.coord.lat, lng: n.coord.lng });
+    }
+    return map;
+  }, [geoNodes]);
+
   /* ── Initialize Cesium ── */
   useEffect(() => {
     if (!containerRef.current) return;
@@ -44,7 +86,6 @@ export function CenterGlobeStage() {
 
     (async () => {
       try {
-        // Set base URL before any Cesium imports
         (window as unknown as Record<string, unknown>).CESIUM_BASE_URL =
           "https://cesium.com/downloads/cesiumjs/releases/1.121/Build/Cesium";
 
@@ -57,7 +98,6 @@ export function CenterGlobeStage() {
         cesiumViewerModule = viewerMod;
         CesiumLib = cesium;
 
-        // Cesium CSS loaded via CDN link in page head
         // @ts-ignore dynamic CSS import
         try { await import("cesium/Build/Cesium/Widgets/widgets.css"); } catch { /* CSS loaded via CDN fallback */ }
 
@@ -83,7 +123,7 @@ export function CenterGlobeStage() {
         viewerRef.current = null;
       }
     };
-  }, []); // Mount once, never remount
+  }, []);
 
   /* ── Sync nodes to Cesium entities ── */
   useEffect(() => {
@@ -91,11 +131,9 @@ export function CenterGlobeStage() {
     const viewer = viewerRef.current;
     const Cesium = CesiumLib;
 
-    // Clear existing entities
     viewer.entities.removeAll();
     entitiesRef.current.clear();
 
-    // Add nodes
     for (const node of visibleNodes) {
       const color =
         node.severity >= 0.7
@@ -133,7 +171,6 @@ export function CenterGlobeStage() {
       entitiesRef.current.set(node.id, entity);
     }
 
-    // Add routes as polylines
     for (const route of visibleRoutes) {
       const routeColor = route.disrupted
         ? Cesium.Color.fromCssColorString("rgba(248,113,113,0.5)")
@@ -174,8 +211,6 @@ export function CenterGlobeStage() {
           type: "SELECT_NODE",
           nodeId: selectedNodeId === nodeId ? null : nodeId,
         });
-
-        // Fly to selected node
         const node = geoNodes.find((n) => n.id === nodeId);
         if (node && cesiumViewerModule) {
           cesiumViewerModule.focusNode(viewer, node.coord.lat, node.coord.lng);
@@ -225,14 +260,16 @@ export function CenterGlobeStage() {
         style={{ display: cesiumReady ? "block" : "none" }}
       />
 
-      {/* ── SVG Fallback (shown while Cesium loads or if it fails) ── */}
-      {!cesiumReady && (
-        <div className="relative flex-1">
+      {/* ── SVG Fallback / Playback Overlay ── */}
+      {(!cesiumReady || isPlaybackActive) && (
+        <div className="relative flex-1" style={{ zIndex: isPlaybackActive ? 5 : 1 }}>
           <GCCTheaterMap
             nodes={visibleNodes}
             routes={visibleRoutes}
             selectedNodeId={selectedNodeId}
             onNodeClick={handleNodeClick}
+            playbackFrame={currentFrame}
+            nodeCoords={nodeCoords}
           />
         </div>
       )}
@@ -266,6 +303,28 @@ export function CenterGlobeStage() {
         </span>
       </div>
 
+      {/* Playback Status Overlay */}
+      {isPlaybackActive && currentFrame && (
+        <div className="absolute left-3 top-10 z-10 flex flex-col gap-1">
+          <span className="rounded-md bg-black/70 px-2 py-1 text-[9px] font-mono text-amber-400/80 backdrop-blur">
+            T+{Math.round(currentFrame.hoursElapsed)}h &middot;{" "}
+            {currentFrame.affectedCount} affected &middot;{" "}
+            {Math.round(currentFrame.maxImpact * 100)}% peak
+          </span>
+          <span className={`rounded-md px-2 py-0.5 text-[8px] font-mono backdrop-blur ${
+            currentFrame.currentDecision === "emergency_protocol"
+              ? "bg-red-500/20 text-red-400"
+              : currentFrame.currentDecision === "activate_response"
+              ? "bg-amber-500/20 text-amber-400"
+              : currentFrame.currentDecision === "escalate"
+              ? "bg-yellow-500/20 text-yellow-400"
+              : "bg-white/5 text-white/30"
+          }`}>
+            {currentFrame.currentDecision.replace("_", " ").toUpperCase()}
+          </span>
+        </div>
+      )}
+
       {/* Node Count Overlay */}
       <div className="absolute right-3 top-3 z-10">
         <span className="rounded-md bg-black/60 px-2 py-1 text-[9px] text-white/30 backdrop-blur">
@@ -276,7 +335,7 @@ export function CenterGlobeStage() {
       </div>
 
       {/* No Data State */}
-      {!assessment && (
+      {!assessment && playback.status === "idle" && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#050810]/80">
           <p className="text-[11px] text-white/30">
             {t(crCopy.globe.noData, lang)}
@@ -287,18 +346,22 @@ export function CenterGlobeStage() {
   );
 }
 
-/* ── GCC Theater SVG Map (Fallback) ── */
+/* ── GCC Theater SVG Map (Fallback + Playback) ── */
 
 function GCCTheaterMap({
   nodes,
   routes,
   selectedNodeId,
   onNodeClick,
+  playbackFrame,
+  nodeCoords,
 }: {
   nodes: GeoNode[];
   routes: GeoRoute[];
   selectedNodeId: string | null;
   onNodeClick: (id: string) => void;
+  playbackFrame: PlaybackFrame | null;
+  nodeCoords: Map<string, { lat: number; lng: number }>;
 }) {
   const project = (lat: number, lng: number): [number, number] => {
     const x = ((lng - 36) / 24) * 800;
@@ -306,12 +369,15 @@ function GCCTheaterMap({
     return [x, y];
   };
 
+  const hasPlayback = playbackFrame !== null;
+
   return (
     <svg
       viewBox="0 0 800 500"
       className="h-full w-full"
       style={{ background: "radial-gradient(ellipse at center, #0a1020 0%, #050810 100%)" }}
     >
+      {/* Grid lines */}
       {Array.from({ length: 7 }).map((_, i) => {
         const x = (i / 6) * 800;
         return (
@@ -324,7 +390,9 @@ function GCCTheaterMap({
           <line key={`hg-${i}`} x1={0} y1={y} x2={800} y2={y} stroke="rgba(255,255,255,0.03)" strokeWidth={0.5} />
         );
       })}
-      {routes.map((route) => {
+
+      {/* Static routes (when no playback) */}
+      {!hasPlayback && routes.map((route) => {
         const [x1, y1] = project(route.from.lat, route.from.lng);
         const [x2, y2] = project(route.to.lat, route.to.lng);
         const midX = (x1 + x2) / 2;
@@ -341,7 +409,37 @@ function GCCTheaterMap({
           </g>
         );
       })}
-      {nodes.map((node) => {
+
+      {/* ── Playback Layers ── */}
+      {hasPlayback && playbackFrame && (
+        <>
+          {/* Impact Rings (behind nodes) */}
+          <ImpactRingsLayer
+            rings={playbackFrame.impactRings}
+            project={project}
+            scale={0.12}
+          />
+
+          {/* Dependency Arcs (animated edges) */}
+          <DependencyArcsLayer
+            edges={playbackFrame.activeEdges}
+            nodes={nodes}
+            project={project}
+          />
+
+          {/* Animated Nodes */}
+          <AnimatedNodesLayer
+            nodes={playbackFrame.activeNodes}
+            selectedNodeId={selectedNodeId}
+            onNodeClick={onNodeClick}
+            project={project}
+            nodeCoords={nodeCoords}
+          />
+        </>
+      )}
+
+      {/* Static nodes (when no playback) */}
+      {!hasPlayback && nodes.map((node) => {
         const [cx, cy] = project(node.coord.lat, node.coord.lng);
         const isSelected = node.id === selectedNodeId;
         const radius = isSelected ? 7 : node.severity > 0.5 ? 5 : 3.5;

@@ -8,7 +8,8 @@ import type { ThreatLevel } from "@/lib/types/controlRoom";
 
 export function LeftSituationRail() {
   const { state, dispatch } = useControlRoomStore();
-  const { incident, layers, geoNodes, selectedNodeId, lang } = state;
+  const { incident, layers, geoNodes, selectedNodeId, lang, playback, narrativeEvents } = state;
+  const isPlaybackActive = playback.status !== "idle";
 
   return (
     <aside
@@ -119,6 +120,58 @@ export function LeftSituationRail() {
           </button>
         ))}
       </div>
+
+      {/* ── Narrative Event Feed (during playback) ── */}
+      {isPlaybackActive && narrativeEvents.length > 0 && (
+        <div className="space-y-2">
+          <span className="text-[10px] uppercase tracking-[0.25em] text-white/30">
+            {lang === "ar" ? "سير الأحداث" : "Event Feed"}
+          </span>
+          <div className="space-y-1.5 max-h-48 overflow-y-auto">
+            {narrativeEvents.map((ev, i) => (
+              <div
+                key={i}
+                className={`rounded-lg border p-2 transition-all ${
+                  ev.active
+                    ? ev.severity === "critical"
+                      ? "border-red-500/25 bg-red-500/[0.06]"
+                      : ev.severity === "warning"
+                      ? "border-amber-500/25 bg-amber-500/[0.06]"
+                      : "border-blue-500/25 bg-blue-500/[0.06]"
+                    : "border-white/[0.04] bg-white/[0.01] opacity-40"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className={`text-[8px] font-mono ${
+                    ev.active ? "text-white/50" : "text-white/20"
+                  }`}>
+                    T+{ev.hour}h
+                  </span>
+                  <span className={`text-[7px] uppercase tracking-wider ${
+                    ev.severity === "critical"
+                      ? "text-red-400"
+                      : ev.severity === "warning"
+                      ? "text-amber-400"
+                      : "text-blue-400"
+                  }`}>
+                    {ev.severity}
+                  </span>
+                </div>
+                <p className={`text-[10px] font-medium leading-snug ${
+                  ev.active ? "text-white/80" : "text-white/30"
+                }`}>
+                  {ev.title}
+                </p>
+                {ev.active && (
+                  <p className="mt-1 text-[9px] text-white/40 leading-relaxed line-clamp-2">
+                    {ev.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Selected Node Detail ── */}
       {selectedNodeId && (
