@@ -27,7 +27,19 @@ NodeType = Literal[
     "social_narrative",
     "price_signal",
     "disruption_event",
-    "decision_action"
+    "decision_action",
+    "energy_production",
+    "energy_refining",
+    "energy_export",
+    "energy_transmission",
+    "maritime_chokepoint",
+    "maritime_port",
+    "financial_macro",
+    "financial_liquidity",
+    "financial_pricing",
+    "utilities_power",
+    "utilities_water",
+    "utilities_telecom"
 ]
 
 EdgeType = Literal[
@@ -40,7 +52,21 @@ EdgeType = Literal[
     "insures",
     "delays",
     "substitutes",
-    "stabilizes"
+    "stabilizes",
+    "disrupts",
+    "triggers",
+    "shocks",
+    "stresses",
+    "feeds",
+    "powers",
+    "restricts",
+    "supports",
+    "from_production",
+    "exports_to",
+    "affects_export",
+    "uses_port",
+    "triggers_repricing",
+    "erodes_confidence"
 ]
 
 
