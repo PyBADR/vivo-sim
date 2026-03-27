@@ -95,10 +95,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/* ── Safe fallback for SSR / pages without provider ── */
+const fallbackI18n: I18nContextValue = {
+  lang: 'en',
+  dir: 'ltr',
+  toggle: () => {},
+  setLang: () => {},
+  t: (_section: string, key: string) => key,
+};
+
 export function useI18n(): I18nContextValue {
   const context = useContext(I18nContext);
-  if (!context) {
-    throw new Error('useI18n must be used within an I18nProvider');
-  }
-  return context;
+  // Return safe fallback during SSR or when provider is missing
+  return context ?? fallbackI18n;
 }

@@ -24,38 +24,20 @@ import type {
 } from "@/lib/types/controlRoom";
 import type { CrisisAssessment } from "@/lib/types/crisis";
 import type { DecisionIntelligenceBundle } from "@/lib/types/decision-intelligence";
+import { ALL_GCC_NODES } from "@/lib/map/data/gccNodes";
 
-/* ── GCC Seed Data ── */
+/* ── Layer Counts from Real Graph ── */
 
-const GCC_AIRPORTS: GeoNode[] = [
-  { id: "DXB", label: "Dubai International", type: "airport", coord: { lat: 25.2532, lng: 55.3657 }, country: "UAE", severity: 0, status: "low" },
-  { id: "AUH", label: "Abu Dhabi International", type: "airport", coord: { lat: 24.4330, lng: 54.6511 }, country: "UAE", severity: 0, status: "low" },
-  { id: "DOH", label: "Hamad International", type: "airport", coord: { lat: 25.2731, lng: 51.6081 }, country: "Qatar", severity: 0, status: "low" },
-  { id: "RUH", label: "King Khalid International", type: "airport", coord: { lat: 24.9576, lng: 46.6988 }, country: "KSA", severity: 0, status: "low" },
-  { id: "JED", label: "King Abdulaziz International", type: "airport", coord: { lat: 21.6796, lng: 39.1565 }, country: "KSA", severity: 0, status: "low" },
-  { id: "KWI", label: "Kuwait International", type: "airport", coord: { lat: 29.2266, lng: 47.9689 }, country: "Kuwait", severity: 0, status: "low" },
-  { id: "BAH", label: "Bahrain International", type: "airport", coord: { lat: 26.2708, lng: 50.6336 }, country: "Bahrain", severity: 0, status: "low" },
-  { id: "MCT", label: "Muscat International", type: "airport", coord: { lat: 23.5933, lng: 58.2844 }, country: "Oman", severity: 0, status: "low" },
-];
-
-const GCC_PORTS: GeoNode[] = [
-  { id: "JEBEL_ALI", label: "Jebel Ali Port", type: "port", coord: { lat: 25.0047, lng: 55.0608 }, country: "UAE", severity: 0, status: "low" },
-  { id: "RAS_TANURA", label: "Ras Tanura", type: "oil_facility", coord: { lat: 26.6441, lng: 50.1622 }, country: "KSA", severity: 0, status: "low" },
-  { id: "HORMUZ", label: "Strait of Hormuz", type: "chokepoint", coord: { lat: 26.5667, lng: 56.25 }, country: "International", severity: 0, status: "low" },
-  { id: "KHARG", label: "Kharg Island Terminal", type: "oil_facility", coord: { lat: 29.2333, lng: 50.3167 }, country: "Iran", severity: 0, status: "low" },
-  { id: "FUJAIRAH", label: "Port of Fujairah", type: "port", coord: { lat: 25.1164, lng: 56.3361 }, country: "UAE", severity: 0, status: "low" },
-];
-
-const GCC_EXCHANGES: GeoNode[] = [
-  { id: "TADAWUL", label: "Tadawul (Saudi Exchange)", type: "exchange", coord: { lat: 24.7136, lng: 46.6753 }, country: "KSA", severity: 0, status: "low" },
-  { id: "DFM", label: "Dubai Financial Market", type: "exchange", coord: { lat: 25.2285, lng: 55.2866 }, country: "UAE", severity: 0, status: "low" },
-  { id: "QSE", label: "Qatar Stock Exchange", type: "exchange", coord: { lat: 25.3157, lng: 51.5307 }, country: "Qatar", severity: 0, status: "low" },
-];
+const airportCount = ALL_GCC_NODES.filter((n) => n.type === "airport").length;
+const portOilCount = ALL_GCC_NODES.filter((n) => ["port", "oil_facility", "chokepoint"].includes(n.type)).length;
+const exchangeCount = ALL_GCC_NODES.filter((n) => n.type === "exchange").length;
+const otherCount = ALL_GCC_NODES.filter((n) => n.type === "city").length;
 
 const DEFAULT_LAYERS = [
-  { id: "airports", label: "Airports", visibility: "visible" as const, nodeCount: GCC_AIRPORTS.length },
-  { id: "ports", label: "Ports & Oil Facilities", visibility: "visible" as const, nodeCount: GCC_PORTS.length },
-  { id: "exchanges", label: "Financial Exchanges", visibility: "hidden" as const, nodeCount: GCC_EXCHANGES.length },
+  { id: "airports", label: "Airports", visibility: "visible" as const, nodeCount: airportCount },
+  { id: "ports", label: "Ports & Energy", visibility: "visible" as const, nodeCount: portOilCount },
+  { id: "exchanges", label: "Financial Exchanges", visibility: "hidden" as const, nodeCount: exchangeCount },
+  { id: "entities", label: "Airlines, Banks, Insurance", visibility: "hidden" as const, nodeCount: otherCount },
   { id: "routes", label: "Trade Routes", visibility: "visible" as const, nodeCount: 0 },
   { id: "heatmap", label: "Impact Overlay", visibility: "hidden" as const, nodeCount: 0 },
 ];
@@ -74,7 +56,15 @@ export const initialControlRoomState: ControlRoomState = {
     confidenceScore: 0,
     timestamp: new Date().toISOString(),
   },
-  geoNodes: [...GCC_AIRPORTS, ...GCC_PORTS, ...GCC_EXCHANGES],
+  geoNodes: ALL_GCC_NODES.map((n) => ({
+    id: n.id,
+    label: n.label,
+    type: n.type,
+    coord: n.coord,
+    country: n.country,
+    severity: n.severity,
+    status: n.status,
+  })),
   geoRoutes: [],
   heatmap: [],
   layers: DEFAULT_LAYERS,

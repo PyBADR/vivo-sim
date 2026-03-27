@@ -2,13 +2,33 @@
 const nextConfig = {
   reactStrictMode: true,
   typescript: {
-    // Allow builds to succeed even with type warnings during development.
-    // CI should enforce strict checks via `tsc --noEmit`.
     ignoreBuildErrors: false,
   },
   eslint: {
-    // Lint during builds — disable only if CI handles it separately.
     ignoreDuringBuilds: false,
   },
-}
-module.exports = nextConfig
+
+  /* ── CesiumJS Configuration ──
+     Cesium workers/assets are loaded from CDN at runtime.
+     No webpack copy needed — avoids ESM minification conflicts. */
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        url: false,
+      };
+
+      // Exclude Cesium workers from webpack processing
+      config.module.rules.push({
+        test: /\.js$/,
+        include: /cesium[\\/]Build/,
+        type: "javascript/auto",
+      });
+    }
+    return config;
+  },
+};
+
+module.exports = nextConfig;
