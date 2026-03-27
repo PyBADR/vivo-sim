@@ -147,6 +147,29 @@ export const crCopy = {
     blocked: { en: "Blocked", ar: "محظور" } as CopyPair,
   },
 
+  /* ── Command Snapshot ── */
+  snapshot: {
+    situation: { en: "Situation", ar: "الموقف" } as CopyPair,
+    impact: { en: "Impact", ar: "الأثر التجاري" } as CopyPair,
+    exposure: { en: "Exposure", ar: "الانكشاف" } as CopyPair,
+    peakRisk: { en: "Peak Risk", ar: "ذروة المخاطر" } as CopyPair,
+    decision: { en: "Decision", ar: "القرار" } as CopyPair,
+    action: { en: "Action", ar: "الإجراء الفوري" } as CopyPair,
+    whyItMatters: { en: "Why", ar: "لماذا يهم" } as CopyPair,
+    timeToImpact: { en: "Time to Impact", ar: "توقيت الأثر" } as CopyPair,
+    confidence: { en: "Confidence", ar: "الموثوقية" } as CopyPair,
+    response: { en: "Recommended Response", ar: "الاستجابة الموصى بها" } as CopyPair,
+    sectors: { en: "Sectors", ar: "القطاعات" } as CopyPair,
+  },
+
+  /* ── Demo Mode ── */
+  demo: {
+    runFull: { en: "Run Full Scenario", ar: "تشغيل السيناريو الكامل" } as CopyPair,
+    runSim: { en: "Run Simulation", ar: "تشغيل المحاكاة" } as CopyPair,
+    stage: { en: "Stage", ar: "المرحلة" } as CopyPair,
+    demoMode: { en: "Demo Mode", ar: "وضع العرض" } as CopyPair,
+  },
+
   /* ── Language Toggle ── */
   lang: {
     toggle: { en: "العربية", ar: "English" } as CopyPair,

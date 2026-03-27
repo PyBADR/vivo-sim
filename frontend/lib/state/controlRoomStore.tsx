@@ -102,6 +102,8 @@ export const initialControlRoomState: ControlRoomState = {
   narrativeEvents: [],
   decisionClarity: null,
   insuranceViz: null,
+  commandSnapshot: null,
+  demoStage: null,
   assessment: null,
   diBundle: null,
 };
@@ -155,6 +157,12 @@ function controlRoomReducer(
 
     case "SET_INSURANCE_VIZ":
       return { ...state, insuranceViz: action.insuranceViz };
+
+    case "SET_COMMAND_SNAPSHOT":
+      return { ...state, commandSnapshot: action.snapshot };
+
+    case "SET_DEMO_STAGE":
+      return { ...state, demoStage: action.stage };
 
     case "UPDATE_PLAYBACK_FRAME": {
       const updatedNarrative = state.narrativeEvents.map((ev) => ({

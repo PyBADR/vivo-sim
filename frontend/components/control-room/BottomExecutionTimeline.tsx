@@ -19,6 +19,8 @@ import {
   GULF_AIRSPACE_DISRUPTION,
 } from "@/lib/visualization/demoScenarios";
 import { setCurrentPlaybackFrame } from "./CenterGlobeStage";
+import { computeCommandSnapshot } from "@/lib/demo/commandSnapshot";
+import { getCurrentStage, GULF_AIRSPACE_STAGES } from "@/lib/demo/demoMode";
 
 const STATUS_COLOR: Record<TimelineTaskStatus, string> = {
   pending: "bg-white/10 border-white/10 text-white/50",
@@ -66,6 +68,12 @@ export function BottomExecutionTimeline() {
           currentDecision: frame.currentDecision,
           insurancePressure: frame.insurancePressure,
         });
+
+        // Update demo stage
+        const stage = getCurrentStage(state.normalizedTime);
+        if (stage) {
+          storeDispatch({ type: "SET_DEMO_STAGE", stage });
+        }
       }
 
       // Update globe visualization
@@ -73,6 +81,20 @@ export function BottomExecutionTimeline() {
     },
     [storeDispatch]
   );
+
+  // Full scenario: run demo + auto-play
+  const handleRunFullScenario = useCallback(() => {
+    handleRunDemo();
+    // Auto-play after a brief pause for UI to render
+    setTimeout(() => {
+      pbDispatch({ type: "PLAY" });
+      storeDispatch({
+        type: "SET_PLAYBACK",
+        playback: { ...storePlayback, status: "playing" },
+      });
+      controllerRef.current?.start();
+    }, 400);
+  }, [storeDispatch, storePlayback]);
 
   // Run demo scenario
   const handleRunDemo = useCallback(() => {
@@ -97,6 +119,20 @@ export function BottomExecutionTimeline() {
     // Push decision clarity and insurance viz to store
     storeDispatch({ type: "SET_DECISION_CLARITY", clarity: result.decisionClarity });
     storeDispatch({ type: "SET_INSURANCE_VIZ", insuranceViz: result.insuranceViz });
+
+    // Compute and push command snapshot
+    if (result.decisionClarity && result.insuranceViz) {
+      try {
+        const snapshot = computeCommandSnapshot(
+          result.signalSummary,
+          result.propagation,
+          result.insuranceViz,
+          result.decisionClarity,
+          { ...storePlayback, status: "paused", totalFrames: result.frames.length, currentFrame: 0, normalizedTime: 0 }
+        );
+        storeDispatch({ type: "SET_COMMAND_SNAPSHOT", snapshot });
+      } catch { /* snapshot optional — don't block demo */ }
+    }
 
     // Set playback status in store
     storeDispatch({
@@ -215,12 +251,20 @@ export function BottomExecutionTimeline() {
           {/* Playback Controls */}
           <div className="flex items-center gap-1.5">
             {!hasFrames && (
-              <button
-                onClick={handleRunDemo}
-                className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-medium text-amber-400 hover:bg-amber-500/20 transition-colors"
-              >
-                {lang === "ar" ? "تشغيل المحاكاة" : "Run Simulation"}
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleRunFullScenario}
+                  className="rounded border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-[10px] font-bold text-amber-400 hover:bg-amber-500/25 transition-colors tracking-wide"
+                >
+                  {t(crCopy.demo.runFull, lang)}
+                </button>
+                <button
+                  onClick={handleRunDemo}
+                  className="rounded border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] text-white/40 hover:bg-white/10 transition-colors"
+                >
+                  {t(crCopy.demo.runSim, lang)}
+                </button>
+              </div>
             )}
 
             {hasFrames && (

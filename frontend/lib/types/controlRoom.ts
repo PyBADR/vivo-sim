@@ -208,6 +208,12 @@ export interface ControlRoomState {
   // eslint-disable-next-line -- dynamic engine output
   insuranceViz: any | null;
 
+  /* Command Snapshot (demo mode) */
+  // eslint-disable-next-line -- dynamic engine output
+  commandSnapshot: any | null;
+  // eslint-disable-next-line -- dynamic engine output
+  demoStage: any | null;
+
   /* Data Sources */
   assessment: CrisisAssessment | null;
   diBundle: DecisionIntelligenceBundle | null;
@@ -235,4 +241,9 @@ export type ControlRoomAction =
   // eslint-disable-next-line -- dynamic engine output
   | { type: "SET_DECISION_CLARITY"; clarity: any }
   // eslint-disable-next-line -- dynamic engine output
-  | { type: "SET_INSURANCE_VIZ"; insuranceViz: any };
+  | { type: "SET_INSURANCE_VIZ"; insuranceViz: any }
+  /* Command snapshot & demo */
+  // eslint-disable-next-line -- dynamic engine output
+  | { type: "SET_COMMAND_SNAPSHOT"; snapshot: any }
+  // eslint-disable-next-line -- dynamic engine output
+  | { type: "SET_DEMO_STAGE"; stage: any };

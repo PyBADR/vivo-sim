@@ -49,6 +49,8 @@ export interface DemoResult {
   scenario: DemoScenario;
   frames: PlaybackFrame[];
   narrativeEvents: NarrativeEvent[];
+  signalSummary: ReturnType<typeof summarizeSignals>;
+  propagation: ReturnType<typeof propagateMultiSignal>;
   propagationResult: ReturnType<typeof propagateMultiSignal>;
   insuranceResult: ReturnType<typeof calculateInsuranceExposure>;
   decisionResult: ReturnType<typeof generateDecision>;
@@ -247,6 +249,8 @@ export function runDemoScenario(scenario: DemoScenario = GULF_AIRSPACE_DISRUPTIO
     scenario,
     frames,
     narrativeEvents,
+    signalSummary,
+    propagation: propagationResult,
     propagationResult,
     insuranceResult,
     decisionResult,

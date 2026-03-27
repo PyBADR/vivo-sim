@@ -1,15 +1,15 @@
 "use client";
 
 /* ── Palantir-Class Regional Command Center ──
-   Full-screen 6-zone CSS grid layout:
+   Full-screen 6-zone CSS grid layout with Command Snapshot overlay:
    ┌─────────────────────────────────────────────┐
    │                 TopCommandBar                │
    ├─────────────────────────────────────────────┤
    │           ImpactSummaryStrip (playback)      │
    ├──────────┬──────────────────┬────────────────┤
    │  Left    │   Center Globe   │   Right        │
-   │ Situation│     Stage        │  Decision      │
-   │  Rail    │                  │   Rail         │
+   │ Situation│  + Snapshot      │  Decision      │
+   │  Rail    │    Overlay       │   Rail         │
    ├──────────┴──────────────────┴────────────────┤
    │           BottomExecutionTimeline            │
    └─────────────────────────────────────────────-┘ */
@@ -21,12 +21,13 @@ import { CenterGlobeStage } from "@/components/control-room/CenterGlobeStage";
 import { RightDecisionRail } from "@/components/control-room/RightDecisionRail";
 import { BottomExecutionTimeline } from "@/components/control-room/BottomExecutionTimeline";
 import { ImpactSummaryStrip } from "@/components/control-room/ImpactSummaryStrip";
+// CommandSnapshotOverlay is rendered inside CenterGlobeStage
 
 export default function CommandCenterPage() {
   return (
     <ControlRoomProvider>
       <div
-        className="h-screen w-screen overflow-hidden bg-[#060810] text-white antialiased"
+        className="relative h-screen w-screen overflow-hidden bg-[#060810] text-white antialiased"
         style={{
           display: "grid",
           gridTemplateAreas: `

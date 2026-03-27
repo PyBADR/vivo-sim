@@ -8,6 +8,7 @@ import type { DecisionClarityResult, DecisionDriver, RecommendedAction, Affected
 import type { InsuranceVisualizationResult } from "@/lib/insurance/insuranceVisualization";
 import { URGENCY_CONFIG } from "@/lib/insurance/insuranceVisualization";
 import type { CopyPair } from "@/lib/types/i18n";
+import type { CommandSnapshot, TimeBand } from "@/lib/demo/commandSnapshot";
 
 /* ── Decision State Visual Config ── */
 
@@ -40,11 +41,12 @@ const CATEGORY_ICON: Record<ActionCategory, string> = {
 
 export function RightDecisionRail() {
   const { state, dispatch } = useControlRoomStore();
-  const { coursesOfAction, selectedCOAId, lang, diBundle, playback, decisionClarity, insuranceViz } = state;
+  const { coursesOfAction, selectedCOAId, lang, diBundle, playback, decisionClarity, insuranceViz, commandSnapshot } = state;
 
   const isPlaybackActive = playback.status !== "idle";
   const clarity = decisionClarity as DecisionClarityResult | null;
   const insViz = insuranceViz as InsuranceVisualizationResult | null;
+  const snapshot = commandSnapshot as CommandSnapshot | null;
 
   return (
     <aside
@@ -73,6 +75,27 @@ export function RightDecisionRail() {
 
           {/* Section 5: Exposed Insurance Lines */}
           <ExposedLinesSection lines={clarity.topExposedLines} insViz={insViz} lang={lang} />
+
+          {/* Section 6: Confidence Narrative */}
+          {snapshot && (
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-3 space-y-1">
+              <span className="text-[8px] uppercase tracking-[0.2em] text-white/30">
+                {t(crCopy.snapshot.confidence, lang)}
+              </span>
+              <p className={`text-[9px] leading-snug ${
+                snapshot.confidenceNarrative.level === "high" ? "text-emerald-400/80"
+                  : snapshot.confidenceNarrative.level === "moderate" ? "text-amber-400/80"
+                  : "text-red-400/80"
+              }`}>
+                {lang === "ar" ? snapshot.confidenceNarrative.text.ar : snapshot.confidenceNarrative.text.en}
+              </p>
+            </div>
+          )}
+
+          {/* Section 7: Time to Impact */}
+          {snapshot && snapshot.timeToImpact.length > 0 && (
+            <TimeToImpactSection entries={snapshot.timeToImpact} lang={lang} />
+          )}
         </>
       ) : (
         <>
@@ -441,6 +464,47 @@ function PostureCell({ label, value, lang }: { label: string; value: string; lan
       <p className={`text-[9px] font-semibold ${isAlert ? "text-amber-400" : "text-white/50"}`}>
         {postureCopy ? t(postureCopy, lang) : value}
       </p>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   Section 7: Time to Impact
+   ═══════════════════════════════════════════════ */
+
+const TIME_BAND_COLOR: Record<TimeBand, string> = {
+  immediate: "text-red-400 border-red-500/20",
+  plus_12h: "text-amber-400 border-amber-500/20",
+  plus_24_48h: "text-blue-400 border-blue-500/20",
+  medium_horizon: "text-white/40 border-white/[0.08]",
+};
+
+function TimeToImpactSection({ entries, lang }: { entries: CommandSnapshot["timeToImpact"]; lang: "en" | "ar" }) {
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-3 space-y-1.5">
+      <span className="text-[8px] uppercase tracking-[0.2em] text-white/30">
+        {lang === "ar" ? "توقيت الأثر" : "Time to Impact"}
+      </span>
+      {entries.map((entry) => {
+        const bandClass = TIME_BAND_COLOR[entry.band] ?? TIME_BAND_COLOR.medium_horizon;
+        return (
+          <div key={entry.band} className={`rounded-lg border p-1.5 ${bandClass.split(" ")[1]} bg-white/[0.01]`}>
+            <div className="flex items-center justify-between">
+              <span className={`text-[8px] font-bold ${bandClass.split(" ")[0]}`}>
+                {lang === "ar" ? entry.label.ar : entry.label.en}
+              </span>
+              {entry.sectors.length > 0 && (
+                <span className="text-[7px] text-white/25">
+                  {entry.sectors.slice(0, 2).join(", ")}
+                </span>
+              )}
+            </div>
+            <p className="text-[8px] text-white/35 leading-snug mt-0.5">
+              {lang === "ar" ? entry.consequence.ar : entry.consequence.en}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }

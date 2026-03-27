@@ -15,7 +15,10 @@ import { DependencyArcsLayer } from "./layers/DependencyArcsLayer";
 import { ImpactRingsLayer } from "./layers/ImpactRingsLayer";
 import { AnimatedNodesLayer } from "./layers/AnimatedNodesLayer";
 import { InsuranceClustersLayer } from "./layers/InsuranceClustersLayer";
+import { CommandSnapshotOverlay } from "./CommandSnapshotOverlay";
 import type { InsuranceVisualizationResult } from "@/lib/insurance/insuranceVisualization";
+import { getCurrentStage, type DemoStage } from "@/lib/demo/demoMode";
+import { computeSVGViewBox, interpolateViewBox, DEFAULT_VIEW_BOX, type SVGViewBox } from "@/lib/map/cesium/camera";
 
 /* ── CesiumJS: dynamic import (SSR=false) ── */
 
@@ -32,13 +35,18 @@ export function setCurrentPlaybackFrame(frame: PlaybackFrame | null) {
 
 export function CenterGlobeStage() {
   const { state, dispatch } = useControlRoomStore();
-  const { geoNodes, geoRoutes, layers, selectedNodeId, lang, assessment, playback, insuranceViz } = state;
+  const { geoNodes, geoRoutes, layers, selectedNodeId, lang, assessment, playback, insuranceViz, demoStage } = state;
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<InstanceType<typeof import("cesium").Viewer> | null>(null);
   const entitiesRef = useRef<Map<string, unknown>>(new Map());
   const [cesiumReady, setCesiumReady] = useState(false);
   const [cesiumError, setCesiumError] = useState<string | null>(null);
   const [currentFrame, setCurrentFrame] = useState<PlaybackFrame | null>(null);
+
+  // Camera choreography state
+  const [viewBox, setViewBox] = useState<SVGViewBox>(DEFAULT_VIEW_BOX);
+  const lastStageRef = useRef<string | null>(null);
+  const cameraAnimRef = useRef<number | null>(null);
 
   // Poll for playback frame updates (60fps-safe)
   useEffect(() => {
@@ -51,6 +59,51 @@ export function CenterGlobeStage() {
     }
     rafId = requestAnimationFrame(poll);
     return () => cancelAnimationFrame(rafId);
+  }, [playback.status]);
+
+  // Camera choreography: animate viewBox when demo stage changes
+  useEffect(() => {
+    const stage = demoStage as DemoStage | null;
+    if (!stage || stage.id === lastStageRef.current) return;
+    lastStageRef.current = stage.id;
+
+    const targetVB = computeSVGViewBox({
+      lat: stage.mapFocusTarget.lat,
+      lng: stage.mapFocusTarget.lng,
+      zoom: stage.mapFocusTarget.zoom,
+      duration: 2,
+    });
+
+    // Animate from current viewBox to target
+    const fromVB = { ...viewBox };
+    const startTime = performance.now();
+    const duration = 1500; // 1.5s smooth transition
+
+    if (cameraAnimRef.current) cancelAnimationFrame(cameraAnimRef.current);
+
+    function animate(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const current = interpolateViewBox(fromVB, targetVB, progress);
+      setViewBox(current);
+
+      if (progress < 1) {
+        cameraAnimRef.current = requestAnimationFrame(animate);
+      }
+    }
+    cameraAnimRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (cameraAnimRef.current) cancelAnimationFrame(cameraAnimRef.current);
+    };
+  }, [demoStage]);
+
+  // Reset viewBox when playback stops
+  useEffect(() => {
+    if (playback.status === "idle") {
+      setViewBox(DEFAULT_VIEW_BOX);
+      lastStageRef.current = null;
+    }
   }, [playback.status]);
 
   const isPlaybackActive = playback.status !== "idle" && currentFrame !== null;
@@ -273,6 +326,8 @@ export function CenterGlobeStage() {
             playbackFrame={currentFrame}
             nodeCoords={nodeCoords}
             insuranceViz={insuranceViz as InsuranceVisualizationResult | null}
+            viewBox={viewBox}
+            dominantNodes={new Set((demoStage as DemoStage | null)?.dominantNodes ?? [])}
           />
         </div>
       )}
@@ -337,6 +392,9 @@ export function CenterGlobeStage() {
         </span>
       </div>
 
+      {/* Command Snapshot Overlay */}
+      <CommandSnapshotOverlay />
+
       {/* No Data State */}
       {!assessment && playback.status === "idle" && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#050810]/80">
@@ -359,6 +417,8 @@ function GCCTheaterMap({
   playbackFrame,
   nodeCoords,
   insuranceViz,
+  viewBox,
+  dominantNodes,
 }: {
   nodes: GeoNode[];
   routes: GeoRoute[];
@@ -367,6 +427,8 @@ function GCCTheaterMap({
   playbackFrame: PlaybackFrame | null;
   nodeCoords: Map<string, { lat: number; lng: number }>;
   insuranceViz: InsuranceVisualizationResult | null;
+  viewBox: SVGViewBox;
+  dominantNodes: Set<string>;
 }) {
   const project = (lat: number, lng: number): [number, number] => {
     const x = ((lng - 36) / 24) * 800;
@@ -378,8 +440,9 @@ function GCCTheaterMap({
 
   return (
     <svg
-      viewBox="0 0 800 500"
-      className="h-full w-full"
+      viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
+      className="h-full w-full transition-none"
+      preserveAspectRatio="xMidYMid meet"
       style={{ background: "radial-gradient(ellipse at center, #0a1020 0%, #050810 100%)" }}
     >
       {/* Grid lines */}
@@ -455,11 +518,14 @@ function GCCTheaterMap({
       {!hasPlayback && nodes.map((node) => {
         const [cx, cy] = project(node.coord.lat, node.coord.lng);
         const isSelected = node.id === selectedNodeId;
+        // Primary path dominance: dim non-dominant nodes during demo
+        const isDominant = dominantNodes.size === 0 || dominantNodes.has(node.id);
+        const opacityMod = isDominant ? 1 : 0.25;
         const radius = isSelected ? 7 : node.severity > 0.5 ? 5 : 3.5;
         const color = node.severity >= 0.7 ? "#f87171" : node.severity >= 0.4 ? "#fbbf24" : node.severity > 0 ? "#60a5fa" : "rgba(255,255,255,0.3)";
         return (
-          <g key={node.id} onClick={() => onNodeClick(node.id)} style={{ cursor: "pointer" }}>
-            {node.severity >= 0.6 && (
+          <g key={node.id} onClick={() => onNodeClick(node.id)} style={{ cursor: "pointer", opacity: opacityMod }}>
+            {node.severity >= 0.6 && isDominant && (
               <circle cx={cx} cy={cy} r={radius + 4} fill="none" stroke={color} strokeWidth={0.5} opacity={0.4}>
                 <animate attributeName="r" from={String(radius + 2)} to={String(radius + 10)} dur="2s" repeatCount="indefinite" />
                 <animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite" />
@@ -467,7 +533,7 @@ function GCCTheaterMap({
             )}
             {isSelected && <circle cx={cx} cy={cy} r={radius + 3} fill="none" stroke="#3b82f6" strokeWidth={1.5} />}
             <circle cx={cx} cy={cy} r={radius} fill={color} opacity={0.9} />
-            <text x={cx} y={cy - radius - 4} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize={8} fontFamily="system-ui">{node.id}</text>
+            <text x={cx} y={cy - radius - 4} textAnchor="middle" fill={`rgba(255,255,255,${isDominant ? 0.5 : 0.15})`} fontSize={8} fontFamily="system-ui">{node.id}</text>
           </g>
         );
       })}
