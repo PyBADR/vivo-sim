@@ -4,6 +4,7 @@
    Dominant top-center overlay above the globe stage.
    The first thing a viewer understands.
    Answers in 5 seconds: situation, impact, exposure, risk, decision, action, why, timing.
+   + Financial impact, inaction risk, and confidence basis.
    Compact, high-contrast, enterprise tone. Does not hide critical map context. */
 
 import { useControlRoomStore } from "@/lib/state/controlRoomStore";
@@ -12,6 +13,10 @@ import { t } from "@/lib/utils/i18n";
 import type { CommandSnapshot, TimeToImpactEntry, TimeBand } from "@/lib/demo/commandSnapshot";
 import type { CopyPair } from "@/lib/types/i18n";
 import { getCurrentStage, GULF_AIRSPACE_STAGES } from "@/lib/demo/demoMode";
+import type { FinancialImpactResult } from "@/lib/finance/financialImpact";
+import { formatLossRange, formatUSD } from "@/lib/finance/financialImpact";
+import type { TrustLayerResult } from "@/lib/trust/trustLayer";
+import { getVisibility } from "@/lib/demo/executiveMode";
 
 /* ── Decision Color Config ── */
 
@@ -35,12 +40,21 @@ const CONFIDENCE_COLOR: Record<string, string> = {
   low:      "text-red-400",
 };
 
+const INACTION_URGENCY_COLOR: Record<string, string> = {
+  immediate: "text-red-400",
+  short_term: "text-amber-400",
+  medium_term: "text-white/40",
+};
+
 export function CommandSnapshotOverlay() {
   const { state } = useControlRoomStore();
-  const { playback, commandSnapshot, lang } = state;
+  const { playback, commandSnapshot, financialImpact, trustLayer, viewMode, lang } = state;
 
   const isActive = playback.status !== "idle";
   const snapshot = commandSnapshot as CommandSnapshot | null;
+  const finance = financialImpact as FinancialImpactResult | null;
+  const trust = trustLayer as TrustLayerResult | null;
+  const vis = getVisibility(viewMode);
 
   if (!isActive || !snapshot) return null;
 
@@ -52,7 +66,7 @@ export function CommandSnapshotOverlay() {
   const stage = getCurrentStage(playback.normalizedTime);
 
   return (
-    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 w-[580px] max-w-[calc(100%-40px)]">
+    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 w-[600px] max-w-[calc(100%-40px)]">
       <div className={`rounded-xl border backdrop-blur-md ${config.bg} ${config.border} ${config.glow} transition-all duration-500`}>
         {/* ── Row 1: Situation + Decision Badge ── */}
         <div className="flex items-start justify-between gap-3 px-4 pt-3 pb-1.5">
@@ -61,9 +75,9 @@ export function CommandSnapshotOverlay() {
             {stage && (
               <div className="flex items-center gap-1.5 mb-1">
                 <span className="text-[7px] uppercase tracking-[0.15em] text-white/25">
-                  {lang === "ar" ? "المرحلة" : "Stage"} {getCurrentStageIndex(playback.normalizedTime) + 1}/{GULF_AIRSPACE_STAGES.length}
+                  {lang === "ar" ? "\u0627\u0644\u0645\u0631\u062d\u0644\u0629" : "Stage"} {getCurrentStageIndex(playback.normalizedTime) + 1}/{GULF_AIRSPACE_STAGES.length}
                 </span>
-                <span className="text-[8px] text-white/30">·</span>
+                <span className="text-[8px] text-white/30">\u00b7</span>
                 <span className="text-[8px] text-white/35">
                   {lang === "ar" ? stage.title.ar : stage.title.en}
                 </span>
@@ -95,24 +109,27 @@ export function CommandSnapshotOverlay() {
           </div>
         </div>
 
-        {/* ── Row 2: Compact Metrics ── */}
+        {/* ── Row 2: Compact Metrics + Financial ── */}
         <div className="flex items-center gap-4 px-4 pb-2 border-b border-white/[0.04]">
           <SnapshotMetric
             label={t(crCopy.snapshot.impact, lang)}
-            value={`${snapshot.affectedEntitiesCount} ${lang === "ar" ? "جهة" : "entities"}`}
+            value={`${snapshot.affectedEntitiesCount} ${lang === "ar" ? "\u062c\u0647\u0629" : "entities"}`}
           />
-          <SnapshotMetric
-            label={t(crCopy.snapshot.exposure, lang)}
-            value={snapshot.topExposedLines.map((l) => lang === "ar" ? l.name.ar : l.name.en).join(" + ")}
-            alert
-          />
+          {/* Financial loss range — prominent */}
+          {finance && (
+            <SnapshotMetric
+              label={t(crCopy.finance.estimatedLoss, lang)}
+              value={formatLossRange(finance.totalEstimatedLossMin, finance.totalEstimatedLossMax)}
+              alert
+            />
+          )}
           <SnapshotMetric
             label={t(crCopy.snapshot.sectors, lang)}
             value={snapshot.topAffectedSectors.slice(0, 3).join(", ")}
           />
         </div>
 
-        {/* ── Row 3: Action + Why + Confidence ── */}
+        {/* ── Row 3: Action + Inaction + Confidence ── */}
         <div className="px-4 py-2 space-y-1.5">
           {/* Immediate Action */}
           <div className="flex items-start gap-2">
@@ -124,29 +141,49 @@ export function CommandSnapshotOverlay() {
             </p>
           </div>
 
-          {/* Why It Matters */}
-          <div className="flex items-start gap-2">
-            <span className="text-[8px] uppercase tracking-wider text-white/25 shrink-0 mt-0.5 w-16">
-              {t(crCopy.snapshot.whyItMatters, lang)}
-            </span>
-            <p className="text-[9px] text-white/40 leading-snug">
-              {lang === "ar" ? snapshot.whyItMatters.ar : snapshot.whyItMatters.en}
-            </p>
-          </div>
+          {/* If No Action Is Taken — compact inaction warning */}
+          {finance && finance.doNothingNarrative.length > 0 && (
+            <div className="flex items-start gap-2">
+              <span className="text-[8px] uppercase tracking-wider text-amber-400/50 shrink-0 mt-0.5 w-16">
+                {t(crCopy.finance.ifNoAction, lang)}
+              </span>
+              <div className="flex-1 space-y-0.5">
+                {finance.doNothingNarrative.slice(0, viewMode === "executive" ? 2 : 3).map((entry, i) => (
+                  <p key={i} className={`text-[9px] leading-snug ${INACTION_URGENCY_COLOR[entry.urgency] ?? "text-white/40"}`}>
+                    {lang === "ar" ? entry.text.ar : entry.text.en}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
 
-          {/* Confidence */}
-          <div className="flex items-center gap-2">
-            <span className="text-[8px] uppercase tracking-wider text-white/25 shrink-0 w-16">
-              {t(crCopy.snapshot.confidence, lang)}
-            </span>
-            <span className={`text-[9px] ${CONFIDENCE_COLOR[snapshot.confidenceNarrative.level] ?? "text-white/40"}`}>
-              {lang === "ar" ? snapshot.confidenceNarrative.text.ar : snapshot.confidenceNarrative.text.en}
-            </span>
-          </div>
+          {/* Confidence Basis */}
+          {trust && (
+            <div className="flex items-center gap-2">
+              <span className="text-[8px] uppercase tracking-wider text-white/25 shrink-0 w-16">
+                {t(crCopy.trust.confidenceBasis, lang)}
+              </span>
+              <span className={`text-[9px] ${CONFIDENCE_COLOR[trust.actionConfidence] ?? "text-white/40"}`}>
+                {lang === "ar" ? trust.trustNarrative.ar : trust.trustNarrative.en}
+              </span>
+            </div>
+          )}
+
+          {/* Fallback to command-snapshot-level confidence if no trust layer */}
+          {!trust && (
+            <div className="flex items-center gap-2">
+              <span className="text-[8px] uppercase tracking-wider text-white/25 shrink-0 w-16">
+                {t(crCopy.snapshot.confidence, lang)}
+              </span>
+              <span className={`text-[9px] ${CONFIDENCE_COLOR[snapshot.confidenceNarrative.level] ?? "text-white/40"}`}>
+                {lang === "ar" ? snapshot.confidenceNarrative.text.ar : snapshot.confidenceNarrative.text.en}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ── Row 4: Time to Impact Band ── */}
-        {snapshot.timeToImpact.length > 0 && (
+        {vis.showTimeBands && snapshot.timeToImpact.length > 0 && (
           <div className="flex items-stretch border-t border-white/[0.04] divide-x divide-white/[0.04]">
             {snapshot.timeToImpact.map((entry) => (
               <TimeImpactCell key={entry.band} entry={entry} lang={lang} />

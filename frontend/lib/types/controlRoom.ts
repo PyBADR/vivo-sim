@@ -214,6 +214,15 @@ export interface ControlRoomState {
   // eslint-disable-next-line -- dynamic engine output
   demoStage: any | null;
 
+  /* Financial Impact + Trust Layer */
+  // eslint-disable-next-line -- dynamic engine output
+  financialImpact: any | null;
+  // eslint-disable-next-line -- dynamic engine output
+  trustLayer: any | null;
+
+  /* Executive / Analyst View Mode */
+  viewMode: "executive" | "analyst";
+
   /* Data Sources */
   assessment: CrisisAssessment | null;
   diBundle: DecisionIntelligenceBundle | null;
@@ -246,4 +255,11 @@ export type ControlRoomAction =
   // eslint-disable-next-line -- dynamic engine output
   | { type: "SET_COMMAND_SNAPSHOT"; snapshot: any }
   // eslint-disable-next-line -- dynamic engine output
-  | { type: "SET_DEMO_STAGE"; stage: any };
+  | { type: "SET_DEMO_STAGE"; stage: any }
+  /* Financial impact + trust */
+  // eslint-disable-next-line -- dynamic engine output
+  | { type: "SET_FINANCIAL_IMPACT"; financialImpact: any }
+  // eslint-disable-next-line -- dynamic engine output
+  | { type: "SET_TRUST_LAYER"; trustLayer: any }
+  /* View mode */
+  | { type: "SET_VIEW_MODE"; viewMode: "executive" | "analyst" };

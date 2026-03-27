@@ -9,6 +9,10 @@ import type { InsuranceVisualizationResult } from "@/lib/insurance/insuranceVisu
 import { URGENCY_CONFIG } from "@/lib/insurance/insuranceVisualization";
 import type { CopyPair } from "@/lib/types/i18n";
 import type { CommandSnapshot, TimeBand } from "@/lib/demo/commandSnapshot";
+import type { FinancialImpactResult, LossCategory, ScenarioComparison } from "@/lib/finance/financialImpact";
+import { formatUSD, formatLossRange } from "@/lib/finance/financialImpact";
+import type { TrustLayerResult, ConfidenceBasisEntry } from "@/lib/trust/trustLayer";
+import { getVisibility } from "@/lib/demo/executiveMode";
 
 /* ── Decision State Visual Config ── */
 
@@ -31,22 +35,25 @@ const URGENCY_LABEL_COLOR: Record<string, string> = {
 };
 
 const CATEGORY_ICON: Record<ActionCategory, string> = {
-  underwriting: "◆",
-  claims: "●",
-  fraud: "▲",
-  operations: "■",
+  underwriting: "\u25c6",
+  claims: "\u25cf",
+  fraud: "\u25b2",
+  operations: "\u25a0",
 };
 
 /* ── Main Component ── */
 
 export function RightDecisionRail() {
   const { state, dispatch } = useControlRoomStore();
-  const { coursesOfAction, selectedCOAId, lang, diBundle, playback, decisionClarity, insuranceViz, commandSnapshot } = state;
+  const { coursesOfAction, selectedCOAId, lang, diBundle, playback, decisionClarity, insuranceViz, commandSnapshot, financialImpact, trustLayer, viewMode } = state;
 
   const isPlaybackActive = playback.status !== "idle";
   const clarity = decisionClarity as DecisionClarityResult | null;
   const insViz = insuranceViz as InsuranceVisualizationResult | null;
   const snapshot = commandSnapshot as CommandSnapshot | null;
+  const finance = financialImpact as FinancialImpactResult | null;
+  const trust = trustLayer as TrustLayerResult | null;
+  const vis = getVisibility(viewMode);
 
   return (
     <aside
@@ -64,36 +71,31 @@ export function RightDecisionRail() {
           {/* Section 1: Decision Status */}
           <DecisionStatusSection clarity={clarity} playback={playback} lang={lang} />
 
-          {/* Section 2: Why This Decision Changed */}
-          <DriversSection drivers={clarity.topDecisionDrivers} lang={lang} />
+          {/* Section 2: Financial Impact */}
+          {finance && <FinancialImpactSection finance={finance} lang={lang} vis={vis} />}
 
-          {/* Section 3: What To Do Now */}
-          <ActionsSection actions={clarity.recommendedActions} lang={lang} />
-
-          {/* Section 4: Affected Entities */}
-          <EntitiesSection entities={clarity.affectedEntities} lang={lang} />
-
-          {/* Section 5: Exposed Insurance Lines */}
-          <ExposedLinesSection lines={clarity.topExposedLines} insViz={insViz} lang={lang} />
-
-          {/* Section 6: Confidence Narrative */}
-          {snapshot && (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-3 space-y-1">
-              <span className="text-[8px] uppercase tracking-[0.2em] text-white/30">
-                {t(crCopy.snapshot.confidence, lang)}
-              </span>
-              <p className={`text-[9px] leading-snug ${
-                snapshot.confidenceNarrative.level === "high" ? "text-emerald-400/80"
-                  : snapshot.confidenceNarrative.level === "moderate" ? "text-amber-400/80"
-                  : "text-red-400/80"
-              }`}>
-                {lang === "ar" ? snapshot.confidenceNarrative.text.ar : snapshot.confidenceNarrative.text.en}
-              </p>
-            </div>
+          {/* Section 3: Why This Decision Changed */}
+          {vis.showAnalyticDriverDetail && (
+            <DriversSection drivers={clarity.topDecisionDrivers} lang={lang} maxDrivers={vis.maxDrivers} />
           )}
 
-          {/* Section 7: Time to Impact */}
-          {snapshot && snapshot.timeToImpact.length > 0 && (
+          {/* Section 4: What To Do Now */}
+          <ActionsSection actions={clarity.recommendedActions} lang={lang} maxActions={vis.maxActions} />
+
+          {/* Section 5: Affected Entities */}
+          <EntitiesSection entities={clarity.affectedEntities} lang={lang} maxEntities={vis.maxEntities} />
+
+          {/* Section 6: Exposed Insurance Lines */}
+          <ExposedLinesSection lines={clarity.topExposedLines} insViz={insViz} lang={lang} maxLines={vis.maxLines} />
+
+          {/* Section 7: Trust & Model Basis */}
+          {trust && <TrustSection trust={trust} lang={lang} vis={vis} />}
+
+          {/* Section 8: Baseline vs Active */}
+          {finance && <BaselineComparisonSection comparison={finance.scenarioComparison} lang={lang} />}
+
+          {/* Section 9: Time to Impact (analyst view) */}
+          {vis.showTimeBands && snapshot && snapshot.timeToImpact.length > 0 && (
             <TimeToImpactSection entries={snapshot.timeToImpact} lang={lang} />
           )}
         </>
@@ -205,10 +207,81 @@ function DecisionStatusSection({
 }
 
 /* ═══════════════════════════════════════════════
-   Section 2: Why This Decision Changed (Ranked Drivers)
+   Section 2: Financial Impact
    ═══════════════════════════════════════════════ */
 
-function DriversSection({ drivers, lang }: { drivers: DecisionDriver[]; lang: "en" | "ar" }) {
+function FinancialImpactSection({
+  finance,
+  lang,
+  vis,
+}: {
+  finance: FinancialImpactResult;
+  lang: "en" | "ar";
+  vis: ReturnType<typeof getVisibility>;
+}) {
+  return (
+    <div className="rounded-xl border border-amber-500/15 bg-amber-500/[0.03] p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[8px] uppercase tracking-[0.2em] text-amber-400/60">
+          {t(crCopy.finance.estimatedLoss, lang)}
+        </span>
+        <span className="text-[7px] text-white/25">{finance.timeWindow}</span>
+      </div>
+
+      {/* Total Loss Range — prominent */}
+      <div className="text-center py-1">
+        <p className="text-[18px] font-bold text-amber-400 font-mono tracking-tight">
+          {formatLossRange(finance.totalEstimatedLossMin, finance.totalEstimatedLossMax)}
+        </p>
+        <p className="text-[7px] text-white/25 mt-0.5">
+          {t(crCopy.finance.confidenceBand, lang)}: {finance.confidenceBand}
+        </p>
+      </div>
+
+      {/* Category Breakdown */}
+      <div className="space-y-1">
+        {finance.lossBreakdown.slice(0, vis.maxLines).map((cat) => (
+          <LossCategoryRow key={cat.categoryKey} cat={cat} lang={lang} />
+        ))}
+      </div>
+
+      {/* Primary Driver */}
+      <div className="flex items-center justify-between pt-1 border-t border-white/[0.04] text-[8px]">
+        <span className="text-white/25">{t(crCopy.finance.primaryDriver, lang)}</span>
+        <span className="text-white/50">{finance.primaryLossDriver}</span>
+      </div>
+
+      {/* Do-Nothing Cost */}
+      <div className="flex items-center justify-between text-[8px]">
+        <span className="text-amber-400/50">{t(crCopy.finance.doNothingCost, lang)}</span>
+        <span className="text-amber-400 font-mono font-semibold">{formatUSD(finance.doNothingCost)}</span>
+      </div>
+    </div>
+  );
+}
+
+function LossCategoryRow({ cat, lang }: { cat: LossCategory; lang: "en" | "ar" }) {
+  const urgColor = URGENCY_LABEL_COLOR[cat.urgency] ?? "text-white/30 bg-white/5 border-white/10";
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className={`shrink-0 rounded border px-1 py-px text-[6px] font-bold tracking-wider ${urgColor}`}>
+          {cat.urgency === "immediate" ? "IMM" : cat.urgency === "short_term" ? "ST" : "MT"}
+        </span>
+        <span className="text-[9px] text-white/55 truncate">{cat.category}</span>
+      </div>
+      <span className="text-[9px] font-mono text-white/45 shrink-0 ml-2">
+        {formatLossRange(cat.minLoss, cat.maxLoss)}
+      </span>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   Section 3: Why This Decision Changed (Ranked Drivers)
+   ═══════════════════════════════════════════════ */
+
+function DriversSection({ drivers, lang, maxDrivers }: { drivers: DecisionDriver[]; lang: "en" | "ar"; maxDrivers: number }) {
   if (drivers.length === 0) return null;
 
   const maxContribution = Math.max(...drivers.map((d) => d.contribution), 1);
@@ -220,7 +293,7 @@ function DriversSection({ drivers, lang }: { drivers: DecisionDriver[]; lang: "e
       </span>
 
       <div className="space-y-1.5">
-        {drivers.slice(0, 4).map((driver, i) => (
+        {drivers.slice(0, maxDrivers).map((driver, i) => (
           <div key={driver.id} className="space-y-0.5">
             <div className="flex items-start gap-1.5">
               <span className="text-[9px] font-mono text-white/20 mt-px">{i + 1}.</span>
@@ -248,15 +321,15 @@ function DriversSection({ drivers, lang }: { drivers: DecisionDriver[]; lang: "e
 }
 
 /* ═══════════════════════════════════════════════
-   Section 3: What To Do Now (Grouped Actions)
+   Section 4: What To Do Now (Grouped Actions)
    ═══════════════════════════════════════════════ */
 
-function ActionsSection({ actions, lang }: { actions: RecommendedAction[]; lang: "en" | "ar" }) {
+function ActionsSection({ actions, lang, maxActions }: { actions: RecommendedAction[]; lang: "en" | "ar"; maxActions: number }) {
   if (actions.length === 0) return null;
 
   // Group by category
   const grouped = new Map<ActionCategory, RecommendedAction[]>();
-  for (const action of actions) {
+  for (const action of actions.slice(0, maxActions)) {
     const existing = grouped.get(action.category) ?? [];
     existing.push(action);
     grouped.set(action.category, existing);
@@ -302,10 +375,10 @@ function ActionsSection({ actions, lang }: { actions: RecommendedAction[]; lang:
 }
 
 /* ═══════════════════════════════════════════════
-   Section 4: Affected Entities
+   Section 5: Affected Entities
    ═══════════════════════════════════════════════ */
 
-function EntitiesSection({ entities, lang }: { entities: AffectedEntity[]; lang: "en" | "ar" }) {
+function EntitiesSection({ entities, lang, maxEntities }: { entities: AffectedEntity[]; lang: "en" | "ar"; maxEntities: number }) {
   if (entities.length === 0) return null;
 
   return (
@@ -315,9 +388,8 @@ function EntitiesSection({ entities, lang }: { entities: AffectedEntity[]; lang:
       </span>
 
       <div className="space-y-1">
-        {entities.slice(0, 5).map((entity) => (
+        {entities.slice(0, maxEntities).map((entity) => (
           <div key={entity.id} className="flex items-center gap-2">
-            {/* Impact dot */}
             <div
               className="h-1.5 w-1.5 rounded-full shrink-0"
               style={{
@@ -333,9 +405,9 @@ function EntitiesSection({ entities, lang }: { entities: AffectedEntity[]; lang:
               </div>
               <div className="flex items-center gap-1.5 text-[7px] text-white/25">
                 <span>{entity.sector}</span>
-                <span>·</span>
+                <span>\u00b7</span>
                 <span>{entity.country}</span>
-                <span>·</span>
+                <span>\u00b7</span>
                 <span className="italic">{entity.role}</span>
               </div>
             </div>
@@ -347,17 +419,19 @@ function EntitiesSection({ entities, lang }: { entities: AffectedEntity[]; lang:
 }
 
 /* ═══════════════════════════════════════════════
-   Section 5: Exposed Insurance Lines
+   Section 6: Exposed Insurance Lines
    ═══════════════════════════════════════════════ */
 
 function ExposedLinesSection({
   lines,
   insViz,
   lang,
+  maxLines,
 }: {
   lines: ExposedLine[];
   insViz: InsuranceVisualizationResult | null;
   lang: "en" | "ar";
+  maxLines: number;
 }) {
   if (lines.length === 0) return null;
 
@@ -385,7 +459,7 @@ function ExposedLinesSection({
 
       {/* Line Cards */}
       <div className="space-y-1">
-        {lines.slice(0, 4).map((line) => {
+        {lines.slice(0, maxLines).map((line) => {
           const urgConfig = URGENCY_CONFIG[line.urgency] ?? URGENCY_CONFIG.stable;
           return (
             <div key={line.line} className={`rounded-lg border p-2 ${urgConfig.bgClass} ${urgConfig.borderClass}`}>
@@ -399,11 +473,11 @@ function ExposedLinesSection({
               </div>
               <div className="flex items-center gap-2 mt-0.5 text-[7px] text-white/30">
                 <span>Sev +{Math.round(line.severityUplift * 100)}%</span>
-                <span>·</span>
+                <span>\u00b7</span>
                 <span>Freq +{Math.round(line.frequencyUplift * 100)}%</span>
                 {line.fraudUplift > 0.1 && (
                   <>
-                    <span>·</span>
+                    <span>\u00b7</span>
                     <span className="text-red-400/60">Fraud +{Math.round(line.fraudUplift * 100)}%</span>
                   </>
                 )}
@@ -430,6 +504,182 @@ function ExposedLinesSection({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   Section 7: Trust & Model Basis
+   ═══════════════════════════════════════════════ */
+
+function TrustSection({
+  trust,
+  lang,
+  vis,
+}: {
+  trust: TrustLayerResult;
+  lang: "en" | "ar";
+  vis: ReturnType<typeof getVisibility>;
+}) {
+  const scoreColor =
+    trust.trustScore >= 65 ? "text-emerald-400"
+    : trust.trustScore >= 40 ? "text-amber-400"
+    : "text-red-400";
+
+  const actionColor =
+    trust.actionConfidence === "high" ? "text-emerald-400"
+    : trust.actionConfidence === "moderate" ? "text-amber-400"
+    : "text-red-400";
+
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-3 space-y-2">
+      <span className="text-[8px] uppercase tracking-[0.2em] text-white/30">
+        {t(crCopy.trust.modelBasis, lang)}
+      </span>
+
+      {/* Trust Score + Action Confidence */}
+      <div className="grid grid-cols-2 gap-1.5">
+        <div className="rounded-lg bg-black/25 p-1.5 space-y-0.5">
+          <p className="text-[7px] text-white/30">{t(crCopy.trust.trustScore, lang)}</p>
+          <p className={`text-[14px] font-bold font-mono ${scoreColor}`}>{trust.trustScore}</p>
+        </div>
+        <div className="rounded-lg bg-black/25 p-1.5 space-y-0.5">
+          <p className="text-[7px] text-white/30">{t(crCopy.trust.actionConfidence, lang)}</p>
+          <p className={`text-[11px] font-semibold ${actionColor}`}>
+            {trust.actionConfidence.toUpperCase()}
+          </p>
+        </div>
+      </div>
+
+      {/* Quick stats */}
+      <div className="flex items-center justify-between text-[8px]">
+        <span className="text-white/25">{t(crCopy.trust.signals, lang)}</span>
+        <span className="text-white/50 font-mono">{trust.confirmedSignals} ({trust.sourceCount} types)</span>
+      </div>
+      <div className="flex items-center justify-between text-[8px]">
+        <span className="text-white/25">{t(crCopy.trust.activeNodes, lang)} / {t(crCopy.trust.activeEdges, lang)}</span>
+        <span className="text-white/50 font-mono">{trust.activeNodesCount} / {trust.activeEdgesCount}</span>
+      </div>
+
+      {/* Confidence Basis Bullets */}
+      <div className="space-y-1 pt-1 border-t border-white/[0.04]">
+        {trust.confidenceBasis.slice(0, vis.maxDrivers).map((basis) => (
+          <ConfidenceBasisRow key={basis.factor} basis={basis} lang={lang} />
+        ))}
+      </div>
+
+      {/* Model Inputs (analyst only) */}
+      {vis.showModelInputs && trust.modelInputsSummary.length > 0 && (
+        <div className="space-y-0.5 pt-1 border-t border-white/[0.04]">
+          <span className="text-[7px] uppercase tracking-wider text-white/20">
+            {t(crCopy.trust.modelInputs, lang)}
+          </span>
+          {trust.modelInputsSummary.map((input) => (
+            <div key={input.value} className="flex items-center justify-between text-[8px]">
+              <span className="text-white/25">{lang === "ar" ? input.label.ar : input.label.en}</span>
+              <span className="text-white/45 font-mono">{input.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Known Limitations (analyst only) */}
+      {vis.showKnownLimitations && trust.knownLimitations.length > 0 && (
+        <div className="space-y-0.5 pt-1 border-t border-white/[0.04]">
+          <span className="text-[7px] uppercase tracking-wider text-white/20">
+            {t(crCopy.trust.knownLimitations, lang)}
+          </span>
+          {trust.knownLimitations.map((lim, i) => (
+            <p key={i} className={`text-[8px] leading-snug ${lim.severity === "high" ? "text-red-400/60" : lim.severity === "medium" ? "text-amber-400/50" : "text-white/30"}`}>
+              {lang === "ar" ? lim.text.ar : lim.text.en}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ConfidenceBasisRow({ basis, lang }: { basis: ConfidenceBasisEntry; lang: "en" | "ar" }) {
+  const strengthColor =
+    basis.strength === "strong" ? "bg-emerald-400"
+    : basis.strength === "moderate" ? "bg-amber-400"
+    : "bg-red-400";
+
+  return (
+    <div className="flex items-start gap-1.5">
+      <div className={`h-1.5 w-1.5 rounded-full shrink-0 mt-1 ${strengthColor}`} />
+      <p className="text-[8px] text-white/40 leading-snug">
+        {lang === "ar" ? basis.description.ar : basis.description.en}
+      </p>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   Section 8: Baseline vs Active Comparison
+   ═══════════════════════════════════════════════ */
+
+function BaselineComparisonSection({ comparison, lang }: { comparison: ScenarioComparison; lang: "en" | "ar" }) {
+  const decisionStateLabel = (state: string) => {
+    const key = state as keyof typeof crCopy.decisionStates;
+    const copy = crCopy.decisionStates[key] as CopyPair | undefined;
+    return copy ? t(copy, lang) : state;
+  };
+
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-3 space-y-2">
+      <span className="text-[8px] uppercase tracking-[0.2em] text-white/30">
+        {t(crCopy.finance.baselineVsActive, lang)}
+      </span>
+
+      <div className="space-y-1.5">
+        <ComparisonRow
+          label={t(crCopy.finance.risk, lang)}
+          baseline={`${comparison.baselineRisk}%`}
+          active={`${comparison.activeRisk}%`}
+          delta={`+${comparison.riskDelta}%`}
+          isAlert={comparison.riskDelta > 20}
+        />
+        <ComparisonRow
+          label={t(crCopy.finance.loss, lang)}
+          baseline={formatUSD(comparison.baselineLoss)}
+          active={formatLossRange(comparison.activeLossMin, comparison.activeLossMax)}
+          delta={`+${formatUSD(comparison.lossDelta)}`}
+          isAlert={comparison.lossDelta > 500000}
+        />
+        <ComparisonRow
+          label={t(crCopy.decision.decisionState, lang)}
+          baseline={decisionStateLabel(comparison.baselineDecision)}
+          active={decisionStateLabel(comparison.activeDecision)}
+          delta="\u2192"
+          isAlert={comparison.activeDecision !== "hold"}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ComparisonRow({
+  label,
+  baseline,
+  active,
+  delta,
+  isAlert,
+}: {
+  label: string;
+  baseline: string;
+  active: string;
+  delta: string;
+  isAlert: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between text-[8px]">
+      <span className="text-white/25 shrink-0 w-14">{label}</span>
+      <span className="text-white/35 font-mono">{baseline}</span>
+      <span className="text-white/20">\u2192</span>
+      <span className={`font-mono font-medium ${isAlert ? "text-amber-400" : "text-white/55"}`}>{active}</span>
+      <span className={`font-mono text-[7px] ${isAlert ? "text-red-400" : "text-white/30"}`}>{delta}</span>
     </div>
   );
 }
@@ -469,7 +719,7 @@ function PostureCell({ label, value, lang }: { label: string; value: string; lan
 }
 
 /* ═══════════════════════════════════════════════
-   Section 7: Time to Impact
+   Section 9: Time to Impact
    ═══════════════════════════════════════════════ */
 
 const TIME_BAND_COLOR: Record<TimeBand, string> = {
@@ -483,7 +733,7 @@ function TimeToImpactSection({ entries, lang }: { entries: CommandSnapshot["time
   return (
     <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-3 space-y-1.5">
       <span className="text-[8px] uppercase tracking-[0.2em] text-white/30">
-        {lang === "ar" ? "توقيت الأثر" : "Time to Impact"}
+        {lang === "ar" ? "\u062a\u0648\u0642\u064a\u062a \u0627\u0644\u0623\u062b\u0631" : "Time to Impact"}
       </span>
       {entries.map((entry) => {
         const bandClass = TIME_BAND_COLOR[entry.band] ?? TIME_BAND_COLOR.medium_horizon;

@@ -104,6 +104,9 @@ export const initialControlRoomState: ControlRoomState = {
   insuranceViz: null,
   commandSnapshot: null,
   demoStage: null,
+  financialImpact: null,
+  trustLayer: null,
+  viewMode: "analyst",
   assessment: null,
   diBundle: null,
 };
@@ -163,6 +166,15 @@ function controlRoomReducer(
 
     case "SET_DEMO_STAGE":
       return { ...state, demoStage: action.stage };
+
+    case "SET_FINANCIAL_IMPACT":
+      return { ...state, financialImpact: action.financialImpact };
+
+    case "SET_TRUST_LAYER":
+      return { ...state, trustLayer: action.trustLayer };
+
+    case "SET_VIEW_MODE":
+      return { ...state, viewMode: action.viewMode };
 
     case "UPDATE_PLAYBACK_FRAME": {
       const updatedNarrative = state.narrativeEvents.map((ev) => ({

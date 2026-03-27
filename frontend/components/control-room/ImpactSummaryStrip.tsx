@@ -2,7 +2,7 @@
 
 /* ── Impact Summary Strip ──
    Compact high-priority strip between Command Bar and the main grid.
-   Answers in 5 seconds: How many entities? Peak risk? Top sectors? Top line? Decision state?
+   Answers in 5 seconds: How many entities? Peak risk? Top sectors? Loss range? Decision state?
    Only visible during active playback with decision clarity data. */
 
 import { useControlRoomStore } from "@/lib/state/controlRoomStore";
@@ -10,6 +10,9 @@ import { crCopy } from "@/lib/config/control-room-copy";
 import { t } from "@/lib/utils/i18n";
 import type { DecisionClarityResult } from "@/lib/decision/decisionClarity";
 import type { CopyPair } from "@/lib/types/i18n";
+import type { FinancialImpactResult } from "@/lib/finance/financialImpact";
+import { formatLossRange } from "@/lib/finance/financialImpact";
+import type { TrustLayerResult } from "@/lib/trust/trustLayer";
 
 const DECISION_STRIP_COLOR: Record<string, string> = {
   hold: "text-white/40",
@@ -27,10 +30,12 @@ const DECISION_STRIP_BG: Record<string, string> = {
 
 export function ImpactSummaryStrip() {
   const { state } = useControlRoomStore();
-  const { playback, decisionClarity, lang } = state;
+  const { playback, decisionClarity, financialImpact, trustLayer, lang } = state;
 
   const isActive = playback.status !== "idle";
   const clarity = decisionClarity as DecisionClarityResult | null;
+  const finance = financialImpact as FinancialImpactResult | null;
+  const trust = trustLayer as TrustLayerResult | null;
 
   if (!isActive || !clarity) return null;
 
@@ -54,21 +59,33 @@ export function ImpactSummaryStrip() {
         </span>
       </div>
 
-      {/* Right: Key Metrics */}
+      {/* Right: Key Metrics — now including loss range and trust */}
       <div className="flex items-center gap-4 shrink-0">
+        {/* Financial loss range */}
+        {finance && (
+          <StripMetric
+            label={t(crCopy.finance.lossRange, lang)}
+            value={formatLossRange(finance.totalEstimatedLossMin, finance.totalEstimatedLossMax)}
+            alert
+          />
+        )}
         <StripMetric
           label={t(crCopy.impactSummary.entities, lang)}
           value={String(clarity.affectedEntities.length)}
-        />
-        <StripMetric
-          label={t(crCopy.impactSummary.sectors, lang)}
-          value={String(sectors.size)}
         />
         <StripMetric
           label={t(crCopy.impactSummary.peakRisk, lang)}
           value={`${Math.round(clarity.finalRisk * 100)}%`}
           alert={clarity.finalRisk >= 0.6}
         />
+        {/* Trust score */}
+        {trust && (
+          <StripMetric
+            label={t(crCopy.trust.trustScore, lang)}
+            value={String(trust.trustScore)}
+            alert={trust.trustScore < 50}
+          />
+        )}
         {topLine && (
           <StripMetric
             label={t(crCopy.impactSummary.topLine, lang)}

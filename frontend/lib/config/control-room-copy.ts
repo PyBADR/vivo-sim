@@ -170,6 +170,44 @@ export const crCopy = {
     demoMode: { en: "Demo Mode", ar: "وضع العرض" } as CopyPair,
   },
 
+  /* ── Financial Impact ── */
+  finance: {
+    estimatedLoss: { en: "Estimated Loss Impact", ar: "الأثر المالي التقديري" } as CopyPair,
+    ifNoAction: { en: "If No Action Is Taken", ar: "في حال عدم اتخاذ إجراء" } as CopyPair,
+    lossRange: { en: "Loss Range", ar: "نطاق الخسارة" } as CopyPair,
+    primaryDriver: { en: "Primary Driver", ar: "المحرك الأساسي" } as CopyPair,
+    doNothingCost: { en: "Inaction Cost", ar: "تكلفة عدم الإجراء" } as CopyPair,
+    timeWindow: { en: "Time Window", ar: "النطاق الزمني" } as CopyPair,
+    category: { en: "Category", ar: "الفئة" } as CopyPair,
+    baselineVsActive: { en: "Baseline vs Active", ar: "الحالة الأساسية مقابل الحالية" } as CopyPair,
+    baseline: { en: "Baseline", ar: "الأساسي" } as CopyPair,
+    active: { en: "Active", ar: "الحالي" } as CopyPair,
+    delta: { en: "Delta", ar: "الفرق" } as CopyPair,
+    risk: { en: "Risk", ar: "المخاطر" } as CopyPair,
+    loss: { en: "Loss", ar: "الخسارة" } as CopyPair,
+    confidenceBand: { en: "Estimate Band", ar: "نطاق التقدير" } as CopyPair,
+  },
+
+  /* ── Trust Layer ── */
+  trust: {
+    trustScore: { en: "Trust Score", ar: "درجة الثقة" } as CopyPair,
+    confidenceBasis: { en: "Confidence Basis", ar: "أساس الموثوقية" } as CopyPair,
+    actionConfidence: { en: "Action Confidence", ar: "موثوقية الإجراء" } as CopyPair,
+    modelInputs: { en: "Model Inputs", ar: "مدخلات النموذج" } as CopyPair,
+    knownLimitations: { en: "Known Limitations", ar: "القيود المعروفة" } as CopyPair,
+    signals: { en: "Signals", ar: "الإشارات" } as CopyPair,
+    activeNodes: { en: "Active Nodes", ar: "العقد النشطة" } as CopyPair,
+    activeEdges: { en: "Active Edges", ar: "الروابط النشطة" } as CopyPair,
+    dataRecency: { en: "Data Recency", ar: "حداثة البيانات" } as CopyPair,
+    modelBasis: { en: "Model Basis", ar: "أساس النموذج" } as CopyPair,
+  },
+
+  /* ── View Mode ── */
+  viewMode: {
+    executive: { en: "Executive View", ar: "العرض التنفيذي" } as CopyPair,
+    analyst: { en: "Analyst View", ar: "عرض المحلل" } as CopyPair,
+  },
+
   /* ── Language Toggle ── */
   lang: {
     toggle: { en: "العربية", ar: "English" } as CopyPair,
