@@ -3,10 +3,17 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, BookOpen, Github } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const { t, lang, toggle } = useI18n()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10)
@@ -14,11 +21,15 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  if (!mounted) {
+    return null
+  }
+
   const navLinks = [
-    { href: '/#hero', label: 'Get Started' },
-    { href: '/demo', label: 'Simulation' },
-    { href: '/architecture', label: 'Architecture' },
-    { href: '/#about', label: 'About' },
+    { href: '/#hero', label: t('nav', 'getStarted') },
+    { href: '/demo', label: t('nav', 'simulation') },
+    { href: '/architecture', label: t('nav', 'architecture') },
+    { href: '/#about', label: t('nav', 'about') },
   ]
 
   return (
@@ -58,11 +69,26 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-2">
             <button className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium text-ds-text-secondary hover:text-ds-text transition-all duration-200 rounded-ds hover:bg-ds-card/60">
               <BookOpen size={15} />
-              Docs
+              {t('nav', 'docs')}
             </button>
             <button className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium text-ds-text-secondary hover:text-ds-text transition-all duration-200 rounded-ds hover:bg-ds-card/60">
               <Github size={15} />
-              GitHub
+              {t('nav', 'github')}
+            </button>
+            {/* Language Toggle */}
+            <button
+              onClick={toggle}
+              className={`px-3.5 py-2 text-[13px] font-medium rounded-full border transition-all duration-200 ${
+                lang === 'en'
+                  ? 'bg-ds-accent/10 border-ds-accent/40 text-ds-accent'
+                  : 'border-ds-border/40 text-ds-text-secondary hover:text-ds-text hover:border-ds-border/60'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <span className={`${lang === 'en' ? 'font-bold' : 'font-normal'}`}>EN</span>
+                <span className="text-ds-text-dim">|</span>
+                <span className={`${lang === 'ar' ? 'font-bold' : 'font-normal'}`}>AR</span>
+              </span>
             </button>
           </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useControlRoom } from "@/lib/hooks/useControlRoom";
 import { ScenarioComposer } from "./ScenarioComposer";
 import { SituationFeed } from "./SituationFeed";
@@ -10,12 +11,31 @@ import { DecisionPanel } from "./DecisionPanel";
 import { InterventionPanel } from "./InterventionPanel";
 import { IntelligenceBriefPanel } from "./IntelligenceBriefPanel";
 import { AnalystPanel } from "./AnalystPanel";
+import { AirportImpactPanel } from "./AirportImpactPanel";
+import { EnergyShockPanel } from "./EnergyShockPanel";
+import { ECommerceImpactPanel } from "./ECommerceImpactPanel";
+import { CrisisPresetSelector } from "./CrisisPresetSelector";
 import { StatusRail } from "./StatusRail";
 import { MetricStrip } from "./MetricStrip";
 
 export function ControlRoomShell() {
   const { state, runPipeline, topConfidence, completedStages } =
     useControlRoom();
+  const [crisisAssessment, setCrisisAssessment] = useState<any>(null);
+
+  // Fetch crisis assessment after pipeline completes
+  useEffect(() => {
+    if (completedStages > 0 && completedStages === state.statuses.length) {
+      fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/scenarios/crisis/packs/us-iran-gcc/assessment`
+      )
+        .then((res) => res.json())
+        .then((data) => setCrisisAssessment(data))
+        .catch(() => {
+          // Silent fail
+        });
+    }
+  }, [completedStages, state.statuses.length]);
 
   return (
     <div className="min-h-screen bg-[#060a14] text-white antialiased">
@@ -52,13 +72,14 @@ export function ControlRoomShell() {
         </header>
 
         {/* ── Scenario Composer ─────────────────────── */}
-        <div className="mb-5">
+        <div className="mb-5 space-y-4">
           <ScenarioComposer
             onRun={runPipeline}
             isRunning={state.isRunning}
             defaultValue={state.scenarioInput}
             error={state.error}
           />
+          <CrisisPresetSelector onSelectPreset={runPipeline} />
         </div>
 
         {/* ── 3-column layout ──────────────────────── */}
@@ -94,6 +115,9 @@ export function ControlRoomShell() {
             />
             <IntelligenceBriefPanel brief={state.brief} />
             <AnalystPanel analysis={state.analysis} />
+            <AirportImpactPanel airports={crisisAssessment?.airport_impacts ?? []} />
+            <EnergyShockPanel energy={crisisAssessment?.energy_impact} />
+            <ECommerceImpactPanel ecommerce={crisisAssessment?.ecommerce_impact} />
           </aside>
         </div>
 

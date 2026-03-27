@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import '../styles/globals.css'
+import { I18nClientWrapper } from '@/components/providers/I18nClientWrapper'
 
 export const metadata: Metadata = {
   title: {
@@ -56,9 +57,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" dir="ltr" className="dark">
       <body className="min-h-screen bg-ds-bg text-ds-text antialiased">
-        {children}
+        <I18nClientWrapper>
+          {children}
+        </I18nClientWrapper>
       </body>
     </html>
   )

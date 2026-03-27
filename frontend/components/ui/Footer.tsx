@@ -1,7 +1,11 @@
+'use client'
+
 import Link from 'next/link'
+import { useI18n } from '@/lib/i18n'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
+  const { t } = useI18n()
 
   return (
     <footer className="border-t border-ds-border bg-ds-bg">
@@ -14,12 +18,12 @@ export default function Footer() {
             <span className="text-ds-text font-semibold tracking-tight">Deevo Sim</span>
           </div>
           <nav className="flex items-center gap-8 text-[13px] text-ds-text-secondary">
-            <Link href="/demo" className="hover:text-ds-text transition-colors duration-200">Simulation</Link>
-            <Link href="/architecture" className="hover:text-ds-text transition-colors duration-200">Architecture</Link>
-            <Link href="/#about" className="hover:text-ds-text transition-colors duration-200">About</Link>
+            <Link href="/demo" className="hover:text-ds-text transition-colors duration-200">{t('footer', 'simulation')}</Link>
+            <Link href="/architecture" className="hover:text-ds-text transition-colors duration-200">{t('footer', 'architecture')}</Link>
+            <Link href="/#about" className="hover:text-ds-text transition-colors duration-200">{t('footer', 'about')}</Link>
           </nav>
           <p className="text-micro text-ds-text-dim">
-            &copy; {currentYear} Deevo Analytics
+            &copy; {currentYear} {t('footer', 'copyright')}
           </p>
         </div>
       </div>
