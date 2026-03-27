@@ -13,6 +13,8 @@ import { generateDecision } from "@/lib/engine/decisionEngine";
 import { summarizeSignals, type LiveSignal } from "@/lib/engine/signals";
 import { buildPlaybackFrames, type PlaybackFrame, DEFAULT_PLAYBACK_CONFIG } from "./propagationPlayback";
 import { ALL_GCC_NODES } from "@/lib/map/data/gccNodes";
+import { computeDecisionClarity, type DecisionClarityResult } from "@/lib/decision/decisionClarity";
+import { computeInsuranceVisualization, type InsuranceVisualizationResult } from "@/lib/insurance/insuranceVisualization";
 
 /* ── Scenario Definition ── */
 
@@ -50,6 +52,8 @@ export interface DemoResult {
   propagationResult: ReturnType<typeof propagateMultiSignal>;
   insuranceResult: ReturnType<typeof calculateInsuranceExposure>;
   decisionResult: ReturnType<typeof generateDecision>;
+  decisionClarity: DecisionClarityResult;
+  insuranceViz: InsuranceVisualizationResult;
   nodeCoords: Map<string, { lat: number; lng: number }>;
 }
 
@@ -220,6 +224,12 @@ export function runDemoScenario(scenario: DemoScenario = GULF_AIRSPACE_DISRUPTIO
   const signalSummary = summarizeSignals(mockSignals);
   const decisionResult = generateDecision(propagationResult, insuranceResult, signalSummary);
 
+  // Compute decision clarity
+  const decisionClarity = computeDecisionClarity(signalSummary, propagationResult, insuranceResult, decisionResult);
+
+  // Compute insurance visualization
+  const insuranceViz = computeInsuranceVisualization(insuranceResult, propagationResult, null, nodeCoords);
+
   // Build playback frames
   const config = {
     ...DEFAULT_PLAYBACK_CONFIG,
@@ -240,6 +250,8 @@ export function runDemoScenario(scenario: DemoScenario = GULF_AIRSPACE_DISRUPTIO
     propagationResult,
     insuranceResult,
     decisionResult,
+    decisionClarity,
+    insuranceViz,
     nodeCoords,
   };
 }

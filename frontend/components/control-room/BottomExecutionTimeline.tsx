@@ -94,6 +94,10 @@ export function BottomExecutionTimeline() {
     }));
     storeDispatch({ type: "SET_NARRATIVE_EVENTS", events });
 
+    // Push decision clarity and insurance viz to store
+    storeDispatch({ type: "SET_DECISION_CLARITY", clarity: result.decisionClarity });
+    storeDispatch({ type: "SET_INSURANCE_VIZ", insuranceViz: result.insuranceViz });
+
     // Set playback status in store
     storeDispatch({
       type: "SET_PLAYBACK",

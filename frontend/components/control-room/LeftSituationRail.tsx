@@ -125,50 +125,102 @@ export function LeftSituationRail() {
       {isPlaybackActive && narrativeEvents.length > 0 && (
         <div className="space-y-2">
           <span className="text-[10px] uppercase tracking-[0.25em] text-white/30">
-            {lang === "ar" ? "سير الأحداث" : "Event Feed"}
+            {lang === "ar" ? "مراحل التأثير" : "Impact Stages"}
           </span>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto">
+
+          {/* Stage Progress Bar */}
+          <div className="flex items-center gap-0.5 px-1">
             {narrativeEvents.map((ev, i) => (
               <div
                 key={i}
-                className={`rounded-lg border p-2 transition-all ${
+                className={`h-1 flex-1 rounded-full transition-all duration-300 ${
                   ev.active
                     ? ev.severity === "critical"
-                      ? "border-red-500/25 bg-red-500/[0.06]"
+                      ? "bg-red-400/70"
                       : ev.severity === "warning"
-                      ? "border-amber-500/25 bg-amber-500/[0.06]"
-                      : "border-blue-500/25 bg-blue-500/[0.06]"
-                    : "border-white/[0.04] bg-white/[0.01] opacity-40"
+                      ? "bg-amber-400/60"
+                      : "bg-blue-400/50"
+                    : "bg-white/[0.06]"
                 }`}
-              >
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className={`text-[8px] font-mono ${
-                    ev.active ? "text-white/50" : "text-white/20"
-                  }`}>
-                    T+{ev.hour}h
-                  </span>
-                  <span className={`text-[7px] uppercase tracking-wider ${
-                    ev.severity === "critical"
-                      ? "text-red-400"
-                      : ev.severity === "warning"
-                      ? "text-amber-400"
-                      : "text-blue-400"
-                  }`}>
-                    {ev.severity}
-                  </span>
-                </div>
-                <p className={`text-[10px] font-medium leading-snug ${
-                  ev.active ? "text-white/80" : "text-white/30"
-                }`}>
-                  {ev.title}
-                </p>
-                {ev.active && (
-                  <p className="mt-1 text-[9px] text-white/40 leading-relaxed line-clamp-2">
-                    {ev.description}
-                  </p>
-                )}
-              </div>
+              />
             ))}
+          </div>
+
+          {/* Event Cards */}
+          <div className="space-y-1.5 max-h-48 overflow-y-auto">
+            {narrativeEvents.map((ev, i) => {
+              // Current stage = last active event
+              const isCurrentStage = ev.active && (i === narrativeEvents.length - 1 || !narrativeEvents[i + 1]?.active);
+
+              return (
+                <div
+                  key={i}
+                  className={`rounded-lg border p-2 transition-all ${
+                    isCurrentStage
+                      ? ev.severity === "critical"
+                        ? "border-red-500/30 bg-red-500/[0.08] shadow-[0_0_8px_rgba(239,68,68,0.1)]"
+                        : ev.severity === "warning"
+                        ? "border-amber-500/30 bg-amber-500/[0.08] shadow-[0_0_8px_rgba(245,158,11,0.1)]"
+                        : "border-blue-500/30 bg-blue-500/[0.08] shadow-[0_0_8px_rgba(96,165,250,0.1)]"
+                      : ev.active
+                      ? ev.severity === "critical"
+                        ? "border-red-500/20 bg-red-500/[0.04]"
+                        : ev.severity === "warning"
+                        ? "border-amber-500/20 bg-amber-500/[0.04]"
+                        : "border-blue-500/20 bg-blue-500/[0.04]"
+                      : "border-white/[0.04] bg-white/[0.01] opacity-35"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-0.5">
+                    <div className="flex items-center gap-1.5">
+                      {/* Stage number */}
+                      <span className={`text-[7px] font-mono rounded-full w-3.5 h-3.5 flex items-center justify-center ${
+                        ev.active ? "bg-white/10 text-white/50" : "bg-white/[0.03] text-white/15"
+                      }`}>
+                        {i + 1}
+                      </span>
+                      <span className={`text-[8px] font-mono ${
+                        ev.active ? "text-white/50" : "text-white/20"
+                      }`}>
+                        T+{ev.hour}h
+                      </span>
+                    </div>
+                    <span className={`text-[7px] uppercase tracking-wider ${
+                      ev.severity === "critical"
+                        ? "text-red-400"
+                        : ev.severity === "warning"
+                        ? "text-amber-400"
+                        : "text-blue-400"
+                    }`}>
+                      {ev.severity}
+                    </span>
+                  </div>
+                  <p className={`text-[10px] font-medium leading-snug ${
+                    ev.active ? "text-white/80" : "text-white/30"
+                  }`}>
+                    {ev.title}
+                  </p>
+                  {ev.active && (
+                    <p className="mt-1 text-[9px] text-white/40 leading-relaxed line-clamp-2">
+                      {ev.description}
+                    </p>
+                  )}
+                  {/* Related nodes */}
+                  {isCurrentStage && ev.relatedNodes.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-0.5">
+                      {ev.relatedNodes.map((nid) => (
+                        <span
+                          key={nid}
+                          className="rounded bg-white/[0.06] px-1 py-px text-[7px] text-white/40 font-mono"
+                        >
+                          {nid}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

@@ -202,6 +202,12 @@ export interface ControlRoomState {
   playback: PlaybackSnapshot;
   narrativeEvents: NarrativeEventDisplay[];
 
+  /* Decision Clarity (computed from engines) */
+  // eslint-disable-next-line -- dynamic engine output
+  decisionClarity: any | null;
+  // eslint-disable-next-line -- dynamic engine output
+  insuranceViz: any | null;
+
   /* Data Sources */
   assessment: CrisisAssessment | null;
   diBundle: DecisionIntelligenceBundle | null;
@@ -224,4 +230,9 @@ export type ControlRoomAction =
   /* Playback actions */
   | { type: "SET_PLAYBACK"; playback: PlaybackSnapshot }
   | { type: "SET_NARRATIVE_EVENTS"; events: NarrativeEventDisplay[] }
-  | { type: "UPDATE_PLAYBACK_FRAME"; normalizedTime: number; affectedCount: number; maxImpact: number; currentDecision: PlaybackSnapshot["currentDecision"]; insurancePressure: number; hoursElapsed: number };
+  | { type: "UPDATE_PLAYBACK_FRAME"; normalizedTime: number; affectedCount: number; maxImpact: number; currentDecision: PlaybackSnapshot["currentDecision"]; insurancePressure: number; hoursElapsed: number }
+  /* Decision clarity */
+  // eslint-disable-next-line -- dynamic engine output
+  | { type: "SET_DECISION_CLARITY"; clarity: any }
+  // eslint-disable-next-line -- dynamic engine output
+  | { type: "SET_INSURANCE_VIZ"; insuranceViz: any };

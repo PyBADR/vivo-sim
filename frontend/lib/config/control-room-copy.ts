@@ -71,6 +71,65 @@ export const crCopy = {
     noCOA: { en: "No courses of action available. Load a scenario to generate options.", ar: "لا توجد مسارات عمل متاحة. قم بتحميل سيناريو لتوليد الخيارات." } as CopyPair,
     selectCOA: { en: "Select", ar: "اختيار" } as CopyPair,
     selected: { en: "Selected", ar: "مُختار" } as CopyPair,
+    /* Decision Clarity — boardroom-grade labels */
+    decisionShift: { en: "Decision Shift", ar: "تحوّل القرار" } as CopyPair,
+    whyChanged: { en: "Why This Decision Changed", ar: "لماذا تغيّر هذا القرار" } as CopyPair,
+    whatToDoNow: { en: "What To Do Now", ar: "ماذا يجب فعله الآن" } as CopyPair,
+    affectedEntities: { en: "Affected Entities", ar: "الجهات المتأثرة" } as CopyPair,
+    exposedLines: { en: "Exposed Insurance Lines", ar: "خطوط التأمين المكشوفة" } as CopyPair,
+    peakImpact: { en: "Peak Impact", ar: "أعلى تأثير" } as CopyPair,
+    insurancePressure: { en: "Insurance Pressure", ar: "ضغط التأمين" } as CopyPair,
+    affectedNodes: { en: "Affected Nodes", ar: "العقد المتأثرة" } as CopyPair,
+    decisionState: { en: "Decision State", ar: "حالة القرار" } as CopyPair,
+    financialImpact: { en: "Financial Impact", ar: "الأثر المالي" } as CopyPair,
+    deadline: { en: "Decision Deadline", ar: "الموعد النهائي للقرار" } as CopyPair,
+    portfolioPressure: { en: "Portfolio Pressure", ar: "ضغط المحفظة" } as CopyPair,
+    fraudRisk: { en: "Fraud Escalation", ar: "تصعيد الاحتيال" } as CopyPair,
+    uwPosture: { en: "Underwriting", ar: "الاكتتاب" } as CopyPair,
+    claimsPosture: { en: "Claims", ar: "المطالبات" } as CopyPair,
+  },
+
+  /* ── Decision States ── */
+  decisionStates: {
+    hold: { en: "HOLD", ar: "انتظار" } as CopyPair,
+    escalate: { en: "ESCALATE", ar: "تصعيد" } as CopyPair,
+    activate_response: { en: "ACTIVATE RESPONSE", ar: "تفعيل الاستجابة" } as CopyPair,
+    emergency_protocol: { en: "EMERGENCY PROTOCOL", ar: "بروتوكول الطوارئ" } as CopyPair,
+  },
+
+  /* ── Action Categories ── */
+  actionCategories: {
+    underwriting: { en: "Underwriting", ar: "الاكتتاب" } as CopyPair,
+    claims: { en: "Claims", ar: "المطالبات" } as CopyPair,
+    fraud: { en: "Fraud Prevention", ar: "مكافحة الاحتيال" } as CopyPair,
+    operations: { en: "Operations", ar: "العمليات" } as CopyPair,
+  },
+
+  /* ── Urgency Labels ── */
+  urgencyLabels: {
+    immediate: { en: "IMMEDIATE", ar: "فوري" } as CopyPair,
+    short_term: { en: "SHORT-TERM", ar: "قصير المدى" } as CopyPair,
+    medium_term: { en: "MEDIUM-TERM", ar: "متوسط المدى" } as CopyPair,
+  },
+
+  /* ── Insurance Postures ── */
+  postures: {
+    normal: { en: "Normal", ar: "طبيعي" } as CopyPair,
+    tighten: { en: "Tighten", ar: "تشديد" } as CopyPair,
+    restrict: { en: "Restrict", ar: "تقييد" } as CopyPair,
+    cease: { en: "Cease", ar: "إيقاف" } as CopyPair,
+    monitor: { en: "Monitor", ar: "مراقبة" } as CopyPair,
+    surge_prepare: { en: "Surge Prep", ar: "استعداد للذروة" } as CopyPair,
+    emergency: { en: "Emergency", ar: "طوارئ" } as CopyPair,
+  },
+
+  /* ── Impact Summary Strip ── */
+  impactSummary: {
+    title: { en: "Impact Summary", ar: "ملخص التأثير" } as CopyPair,
+    entities: { en: "Entities", ar: "جهات" } as CopyPair,
+    sectors: { en: "Sectors", ar: "قطاعات" } as CopyPair,
+    peakRisk: { en: "Peak Risk", ar: "أعلى خطر" } as CopyPair,
+    topLine: { en: "Top Exposure", ar: "أعلى انكشاف" } as CopyPair,
   },
 
   /* ── Bottom Timeline ── */

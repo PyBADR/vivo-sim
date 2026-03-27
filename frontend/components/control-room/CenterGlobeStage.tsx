@@ -14,6 +14,8 @@ import type {
 import { DependencyArcsLayer } from "./layers/DependencyArcsLayer";
 import { ImpactRingsLayer } from "./layers/ImpactRingsLayer";
 import { AnimatedNodesLayer } from "./layers/AnimatedNodesLayer";
+import { InsuranceClustersLayer } from "./layers/InsuranceClustersLayer";
+import type { InsuranceVisualizationResult } from "@/lib/insurance/insuranceVisualization";
 
 /* ── CesiumJS: dynamic import (SSR=false) ── */
 
@@ -30,7 +32,7 @@ export function setCurrentPlaybackFrame(frame: PlaybackFrame | null) {
 
 export function CenterGlobeStage() {
   const { state, dispatch } = useControlRoomStore();
-  const { geoNodes, geoRoutes, layers, selectedNodeId, lang, assessment, playback } = state;
+  const { geoNodes, geoRoutes, layers, selectedNodeId, lang, assessment, playback, insuranceViz } = state;
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<InstanceType<typeof import("cesium").Viewer> | null>(null);
   const entitiesRef = useRef<Map<string, unknown>>(new Map());
@@ -270,6 +272,7 @@ export function CenterGlobeStage() {
             onNodeClick={handleNodeClick}
             playbackFrame={currentFrame}
             nodeCoords={nodeCoords}
+            insuranceViz={insuranceViz as InsuranceVisualizationResult | null}
           />
         </div>
       )}
@@ -355,6 +358,7 @@ function GCCTheaterMap({
   onNodeClick,
   playbackFrame,
   nodeCoords,
+  insuranceViz,
 }: {
   nodes: GeoNode[];
   routes: GeoRoute[];
@@ -362,6 +366,7 @@ function GCCTheaterMap({
   onNodeClick: (id: string) => void;
   playbackFrame: PlaybackFrame | null;
   nodeCoords: Map<string, { lat: number; lng: number }>;
+  insuranceViz: InsuranceVisualizationResult | null;
 }) {
   const project = (lat: number, lng: number): [number, number] => {
     const x = ((lng - 36) / 24) * 800;
@@ -426,6 +431,14 @@ function GCCTheaterMap({
             nodes={nodes}
             project={project}
           />
+
+          {/* Insurance Clusters (behind animated nodes) */}
+          {insuranceViz && insuranceViz.hotspotNodes.length > 0 && (
+            <InsuranceClustersLayer
+              hotspots={insuranceViz.hotspotNodes}
+              project={project}
+            />
+          )}
 
           {/* Animated Nodes */}
           <AnimatedNodesLayer

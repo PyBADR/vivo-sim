@@ -1,9 +1,11 @@
 "use client";
 
 /* ── Palantir-Class Regional Command Center ──
-   Full-screen 5-zone CSS grid layout:
+   Full-screen 6-zone CSS grid layout:
    ┌─────────────────────────────────────────────┐
    │                 TopCommandBar                │
+   ├─────────────────────────────────────────────┤
+   │           ImpactSummaryStrip (playback)      │
    ├──────────┬──────────────────┬────────────────┤
    │  Left    │   Center Globe   │   Right        │
    │ Situation│     Stage        │  Decision      │
@@ -18,6 +20,7 @@ import { LeftSituationRail } from "@/components/control-room/LeftSituationRail";
 import { CenterGlobeStage } from "@/components/control-room/CenterGlobeStage";
 import { RightDecisionRail } from "@/components/control-room/RightDecisionRail";
 import { BottomExecutionTimeline } from "@/components/control-room/BottomExecutionTimeline";
+import { ImpactSummaryStrip } from "@/components/control-room/ImpactSummaryStrip";
 
 export default function CommandCenterPage() {
   return (
@@ -28,14 +31,16 @@ export default function CommandCenterPage() {
           display: "grid",
           gridTemplateAreas: `
             "cmdbar   cmdbar   cmdbar"
+            "strip    strip    strip"
             "left     globe    right"
             "timeline timeline timeline"
           `,
           gridTemplateColumns: "280px 1fr 320px",
-          gridTemplateRows: "48px 1fr 160px",
+          gridTemplateRows: "48px auto 1fr 160px",
         }}
       >
         <TopCommandBar />
+        <ImpactSummaryStrip />
         <LeftSituationRail />
         <CenterGlobeStage />
         <RightDecisionRail />
