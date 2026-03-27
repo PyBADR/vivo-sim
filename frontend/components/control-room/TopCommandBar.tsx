@@ -4,10 +4,11 @@ import { useControlRoomStore } from "@/lib/state/controlRoomStore";
 import { crCopy } from "@/lib/config/control-room-copy";
 import { t } from "@/lib/utils/i18n";
 import { threatColor } from "@/lib/theme/command-center-theme";
+import { VIEW_MODE_LABELS } from "@/lib/demo/executiveMode";
 
 export function TopCommandBar() {
   const { state, dispatch, loadScenario } = useControlRoomStore();
-  const { commandBar, lang, loading } = state;
+  const { commandBar, lang, loading, viewMode } = state;
 
   const toggleLang = () =>
     dispatch({ type: "SET_LANG", lang: lang === "en" ? "ar" : "en" });
@@ -88,6 +89,33 @@ export function TopCommandBar() {
 
       {/* Right — Actions */}
       <div className="flex items-center gap-3">
+        {/* Executive / Analyst Toggle */}
+        <div className="flex items-center rounded-md border border-white/[0.08] overflow-hidden">
+          <button
+            onClick={() => dispatch({ type: "SET_VIEW_MODE", viewMode: "executive" })}
+            className={`px-3 py-1 text-[10px] font-medium transition-colors ${
+              viewMode === "executive"
+                ? "bg-blue-600/70 text-white"
+                : "bg-white/[0.02] text-white/40 hover:bg-white/[0.06]"
+            }`}
+          >
+            {lang === "ar" ? VIEW_MODE_LABELS.executive.ar : VIEW_MODE_LABELS.executive.en}
+          </button>
+          <div className="w-px h-4 bg-white/[0.08]" />
+          <button
+            onClick={() => dispatch({ type: "SET_VIEW_MODE", viewMode: "analyst" })}
+            className={`px-3 py-1 text-[10px] font-medium transition-colors ${
+              viewMode === "analyst"
+                ? "bg-blue-600/70 text-white"
+                : "bg-white/[0.02] text-white/40 hover:bg-white/[0.06]"
+            }`}
+          >
+            {lang === "ar" ? VIEW_MODE_LABELS.analyst.ar : VIEW_MODE_LABELS.analyst.en}
+          </button>
+        </div>
+
+        <div className="h-4 w-px bg-white/10" />
+
         <button
           onClick={toggleLang}
           className="rounded-md border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] text-white/50 transition-colors hover:bg-white/[0.06]"

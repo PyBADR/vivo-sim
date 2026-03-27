@@ -21,6 +21,8 @@ import {
 import { setCurrentPlaybackFrame } from "./CenterGlobeStage";
 import { computeCommandSnapshot } from "@/lib/demo/commandSnapshot";
 import { getCurrentStage, GULF_AIRSPACE_STAGES } from "@/lib/demo/demoMode";
+import { computeFinancialImpact } from "@/lib/finance/financialImpact";
+import { computeTrustLayer } from "@/lib/trust/trustLayer";
 
 const STATUS_COLOR: Record<TimelineTaskStatus, string> = {
   pending: "bg-white/10 border-white/10 text-white/50",
@@ -132,6 +134,26 @@ export function BottomExecutionTimeline() {
         );
         storeDispatch({ type: "SET_COMMAND_SNAPSHOT", snapshot });
       } catch { /* snapshot optional — don't block demo */ }
+
+      // Compute and push financial impact + trust layer
+      try {
+        const financialImpact = computeFinancialImpact(
+          result.signalSummary,
+          result.propagation,
+          result.insuranceViz,
+          result.decisionClarity
+        );
+        storeDispatch({ type: "SET_FINANCIAL_IMPACT", financialImpact });
+
+        const trustLayer = computeTrustLayer(
+          result.signalSummary,
+          result.propagation,
+          result.insuranceViz,
+          result.decisionClarity,
+          financialImpact
+        );
+        storeDispatch({ type: "SET_TRUST_LAYER", trustLayer });
+      } catch { /* financial/trust optional — don't block demo */ }
     }
 
     // Set playback status in store
