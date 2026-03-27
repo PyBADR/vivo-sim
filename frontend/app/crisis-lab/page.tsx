@@ -14,10 +14,31 @@ import { FinancialStressPanel } from "@/components/crisis/FinancialStressPanel";
 import { SupplyChainPanel } from "@/components/crisis/SupplyChainPanel";
 import { SocialResponsePanel } from "@/components/crisis/SocialResponsePanel";
 import { ExecutiveActionBundlePanel } from "@/components/crisis/ExecutiveActionBundlePanel";
+
+/* ── Decision Intelligence Panels ── */
+import { ExecutiveNarrativePanel } from "@/components/crisis/ExecutiveNarrativePanel";
+import { DecisionOptionsPanel } from "@/components/crisis/DecisionOptionsPanel";
+import { CriticalNodesPanel } from "@/components/crisis/CriticalNodesPanel";
+import { DecisionWindowPanel } from "@/components/crisis/DecisionWindowPanel";
+import { ConfidenceBandPanel } from "@/components/crisis/ConfidenceBandPanel";
+
+/* ── Hooks ── */
 import { useCrisisLab } from "@/lib/hooks/useCrisisLab";
+import { useDecisionIntelligence } from "@/lib/hooks/useDecisionIntelligence";
 
 export default function CrisisLabPage() {
   const { assessment, loading, error, loadDefaultScenario } = useCrisisLab();
+  const {
+    bundle: diBundle,
+    loading: diLoading,
+    error: diError,
+    loadDecisionIntelligence,
+  } = useDecisionIntelligence();
+
+  const handleLoad = async () => {
+    await loadDefaultScenario();
+    await loadDecisionIntelligence();
+  };
 
   return (
     <div className="min-h-screen bg-[#06070B] text-white antialiased">
@@ -32,7 +53,9 @@ export default function CrisisLabPage() {
           </h1>
           <p className="mt-3 max-w-3xl text-white/60">
             Aviation, energy, logistics, maritime trade, financial markets, and
-            social dynamics — stress-tested across GCC systems.
+            social dynamics — stress-tested across GCC systems. Decision
+            intelligence layer transforms impact data into executive-grade
+            options.
           </p>
         </div>
 
@@ -42,9 +65,9 @@ export default function CrisisLabPage() {
         </div>
 
         {/* ── Error state ── */}
-        {error && (
+        {(error || diError) && (
           <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
-            {error}
+            {error || diError}
           </div>
         )}
 
@@ -53,8 +76,8 @@ export default function CrisisLabPage() {
           {/* Left Rail — Scenario + Summary */}
           <div className="col-span-12 space-y-6 xl:col-span-3">
             <GCCConflictPreset
-              onLoad={loadDefaultScenario}
-              isLoading={loading}
+              onLoad={handleLoad}
+              isLoading={loading || diLoading}
             />
             <CrisisSummaryPanel assessment={assessment} />
             <ExecutiveActionBundlePanel
@@ -72,8 +95,27 @@ export default function CrisisLabPage() {
             <PropagationTimeline steps={assessment?.propagation ?? []} />
           </div>
 
-          {/* Right Rail — Impact Panels */}
+          {/* Right Rail — Decision Intelligence First, then Impact Panels */}
           <div className="col-span-12 space-y-6 xl:col-span-3">
+            {/* ── Decision Intelligence Layer ── */}
+            <ExecutiveNarrativePanel
+              narrative={diBundle?.executive_narrative}
+            />
+            <DecisionOptionsPanel
+              options={diBundle?.decision_options}
+            />
+            <CriticalNodesPanel
+              nodes={diBundle?.critical_nodes}
+            />
+            <DecisionWindowPanel
+              windows={diBundle?.decision_windows}
+            />
+            <ConfidenceBandPanel
+              bands={diBundle?.confidence_bands}
+              overallConfidence={diBundle?.overall_confidence}
+            />
+
+            {/* ── Impact Panels ── */}
             <AirportImpactPanel
               airports={assessment?.airport_impacts ?? []}
             />
