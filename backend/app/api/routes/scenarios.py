@@ -28,11 +28,21 @@ from app.schemas.crisis_outputs import (
     AirportImpact as CrisisAirportImpact,
     EnergyImpact,
     ECommerceImpact as CrisisECommerceImpact,
+    MaritimeTradeImpact,
+    FinancialStressImpact,
+    SupplyChainImpact,
+    SocialResponseImpact,
+    NodeImpact,
+    ExecutiveActionBundle,
 )
 from app.engines.crisis_risk_engine import (
     airport_disruption_score,
     fuel_impact_score,
     ecommerce_disruption_score,
+    maritime_trade_score,
+    market_stress_score,
+    supply_chain_score,
+    public_reaction_score,
 )
 from app.engines.propagation_engine_v3 import run_propagation
 from app.engines.decision_engine import build_ranked_actions
@@ -498,11 +508,12 @@ async def get_crisis_pack():
 )
 async def get_crisis_assessment():
     """Run full crisis assessment: airport impact, energy, e-commerce,
-    propagation, and ranked decision actions.
+    propagation, ranked decision actions, and strategic node impacts.
 
     Returns:
         CrisisAssessment with per-airport ADS, energy impact,
-        e-commerce disruption, 5-step propagation, and ranked actions.
+        e-commerce disruption, maritime/financial/supply chain impacts,
+        5-step propagation, node impacts, and ranked actions.
     """
     pack = get_us_iran_gcc_pack()
 
@@ -563,8 +574,122 @@ async def get_crisis_assessment():
         steps=5,
     )
 
+    # ── Maritime Trade Impact ──
+    maritime_trade = MaritimeTradeImpact(
+        chokepoint_pressure=0.84,
+        port_delay=0.68,
+        insurance_cost_surge=0.76,
+        rerouting_stress=0.62,
+        maritime_trade_score=maritime_trade_score(0.84, 0.68, 0.76, 0.62),
+    )
+
+    # ── Financial Stress Impact ──
+    financial_stress = FinancialStressImpact(
+        oil_volatility=0.79,
+        liquidity_stress=0.71,
+        sentiment_shock=0.64,
+        insurance_repricing=0.73,
+        market_stress_score=market_stress_score(0.79, 0.71, 0.64, 0.73),
+    )
+
+    # ── Supply Chain Impact ──
+    supply_chain = SupplyChainImpact(
+        food_imports_stress=0.58,
+        medicine_supply_stress=0.63,
+        airport_cargo_stress=0.71,
+        last_mile_pressure=0.52,
+        supply_chain_score=supply_chain_score(0.58, 0.63, 0.71, 0.52),
+    )
+
+    # ── Social Response Impact ──
+    social_response = SocialResponseImpact(
+        panic_buying=0.69,
+        media_amplification=0.74,
+        trust_loss=0.58,
+        official_stabilization=0.45,
+        public_reaction_score=public_reaction_score(0.69, 0.74, 0.58, 0.45),
+    )
+
+    # ── Node Impacts ──
+    # Generate from propagation results: map each node to NodeImpact
+    node_impacts = []
+    if propagation:
+        last_step = propagation[-1]
+        node_scores = last_step.node_scores
+
+        # Build node lookup for metadata
+        node_lookup = {n.id: n for n in pack.nodes}
+
+        # Build edge lookup for ripple effects
+        target_edges = {}
+        for edge in pack.edges:
+            if edge.target not in target_edges:
+                target_edges[edge.target] = []
+            target_edges[edge.target].append(edge.source)
+
+        for node_id, prob in node_scores.items():
+            node = node_lookup.get(node_id)
+            if not node:
+                continue
+
+            # Severity from criticality * exposure
+            severity = node.criticality * node.exposure
+
+            # Time to impact (estimated from propagation step index)
+            tti = len(propagation) * 4.0 if prob > 0.3 else None
+
+            # Ripple effects from outgoing edges
+            ripple = target_edges.get(node_id, [])
+
+            node_impacts.append(
+                NodeImpact(
+                    node_id=node.id,
+                    label=node.label,
+                    node_type=node.node_type,
+                    probability_of_disruption=round(prob, 4),
+                    severity_score=round(severity, 4),
+                    time_to_impact_hours=tti,
+                    ripple_effect=ripple,
+                    country=node.country,
+                    tags=node.tags,
+                )
+            )
+
     # ── Ranked Actions ──
     actions = build_ranked_actions()
+
+    # ── Executive Action Bundle ──
+    primary_action = actions[0].label if actions else "Activate Crisis Response"
+    secondary_actions = [
+        a.label for a in actions[1:4]
+    ] if len(actions) > 1 else []
+
+    # Top risks: high-scoring nodes
+    top_risks = [
+        node_impacts[i].label
+        for i in range(min(3, len(node_impacts)))
+        if node_impacts and node_impacts[i].probability_of_disruption > 0.5
+    ]
+
+    # Top nodes: most-affected airports
+    top_nodes = [
+        a.airport_code for a in sorted(
+            airport_impacts,
+            key=lambda x: x.disruption_score,
+            reverse=True
+        )[:3]
+    ]
+
+    executive_bundle = ExecutiveActionBundle(
+        primary_action=primary_action,
+        secondary_actions=secondary_actions,
+        top_risks=top_risks,
+        top_nodes=top_nodes,
+        decision_summary=(
+            "Regional escalation with strong coupling across energy, maritime, "
+            "and aviation systems. Prioritize cargo rerouting and official communication."
+        ),
+    )
 
     return CrisisAssessment(
         scenario_id=pack.scenario_id,
@@ -574,6 +699,12 @@ async def get_crisis_assessment():
         ecommerce_impact=ecommerce,
         propagation=propagation,
         ranked_actions=actions,
+        node_impacts=node_impacts,
+        maritime_trade_impact=maritime_trade,
+        financial_stress_impact=financial_stress,
+        supply_chain_impact=supply_chain,
+        social_response_impact=social_response,
+        executive_action_bundle=executive_bundle,
         summary=(
             "Regional escalation scenario showing strong "
             "airport-fuel-trade coupling across GCC systems."
