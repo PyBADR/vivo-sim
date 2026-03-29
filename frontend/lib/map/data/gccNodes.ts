@@ -15,7 +15,11 @@ export type NodeSector =
   | "government"
   | "telecom"
   | "military"
-  | "infrastructure";
+  | "infrastructure"
+  | "tourism"
+  | "utilities"
+  | "food_supply"
+  | "regulatory";
 
 export interface GraphNode extends GeoNode {
   sector: NodeSector;
@@ -139,6 +143,45 @@ const LOGISTICS: GraphNode[] = [
   { id: "QFZ", label: "Qatar Free Zone", type: "city", coord: { lat: 25.36, lng: 51.44 }, country: "Qatar", severity: 0, status: "low", sector: "logistics", influence: 0.55, isSuper: false },
 ];
 
+/* ── CENTRAL BANKS / REGULATORS ── */
+const CENTRAL_BANKS: GraphNode[] = [
+  { id: "SAMA", label: "SAMA (Saudi Central Bank)", type: "city", coord: { lat: 24.69, lng: 46.69 }, country: "KSA", severity: 0, status: "low", sector: "regulatory", influence: 0.95, isSuper: true },
+  { id: "CBUAE", label: "Central Bank of UAE", type: "city", coord: { lat: 24.46, lng: 54.37 }, country: "UAE", severity: 0, status: "low", sector: "regulatory", influence: 0.90, isSuper: false },
+  { id: "CBK", label: "Central Bank of Kuwait", type: "city", coord: { lat: 29.38, lng: 47.98 }, country: "Kuwait", severity: 0, status: "low", sector: "regulatory", influence: 0.75, isSuper: false },
+  { id: "QCB", label: "Qatar Central Bank", type: "city", coord: { lat: 25.29, lng: 51.53 }, country: "Qatar", severity: 0, status: "low", sector: "regulatory", influence: 0.80, isSuper: false },
+  { id: "CBB", label: "Central Bank of Bahrain", type: "city", coord: { lat: 26.23, lng: 50.58 }, country: "Bahrain", severity: 0, status: "low", sector: "regulatory", influence: 0.65, isSuper: false },
+  { id: "CBO", label: "Central Bank of Oman", type: "city", coord: { lat: 23.61, lng: 58.54 }, country: "Oman", severity: 0, status: "low", sector: "regulatory", influence: 0.65, isSuper: false },
+];
+
+/* ── TOURISM ── */
+const TOURISM: GraphNode[] = [
+  { id: "TOURISM_UAE", label: "UAE Tourism Demand", type: "city", coord: { lat: 25.20, lng: 55.27 }, country: "UAE", severity: 0, status: "low", sector: "tourism", influence: 0.90, isSuper: false },
+  { id: "TOURISM_KSA", label: "KSA Tourism (Vision 2030)", type: "city", coord: { lat: 24.71, lng: 46.67 }, country: "KSA", severity: 0, status: "low", sector: "tourism", influence: 0.85, isSuper: false },
+  { id: "TOURISM_QAT", label: "Qatar Tourism", type: "city", coord: { lat: 25.29, lng: 51.53 }, country: "Qatar", severity: 0, status: "low", sector: "tourism", influence: 0.75, isSuper: false },
+  { id: "TOURISM_BHR", label: "Bahrain Tourism", type: "city", coord: { lat: 26.22, lng: 50.58 }, country: "Bahrain", severity: 0, status: "low", sector: "tourism", influence: 0.55, isSuper: false },
+  { id: "TOURISM_OMN", label: "Oman Tourism", type: "city", coord: { lat: 23.59, lng: 58.38 }, country: "Oman", severity: 0, status: "low", sector: "tourism", influence: 0.60, isSuper: false },
+  { id: "TOURISM_KWT", label: "Kuwait Tourism", type: "city", coord: { lat: 29.37, lng: 47.97 }, country: "Kuwait", severity: 0, status: "low", sector: "tourism", influence: 0.45, isSuper: false },
+];
+
+/* ── UTILITIES (Electricity & Water) ── */
+const UTILITIES: GraphNode[] = [
+  { id: "SEC", label: "Saudi Electricity Co (SEC)", type: "city", coord: { lat: 24.72, lng: 46.63 }, country: "KSA", severity: 0, status: "low", sector: "utilities", influence: 0.85, isSuper: false },
+  { id: "DEWA", label: "DEWA (Dubai)", type: "city", coord: { lat: 25.23, lng: 55.28 }, country: "UAE", severity: 0, status: "low", sector: "utilities", influence: 0.85, isSuper: false },
+  { id: "ADDC", label: "ADDC (Abu Dhabi)", type: "city", coord: { lat: 24.45, lng: 54.65 }, country: "UAE", severity: 0, status: "low", sector: "utilities", influence: 0.70, isSuper: false },
+  { id: "KAHRAMAA", label: "Kahramaa (Qatar)", type: "city", coord: { lat: 25.30, lng: 51.53 }, country: "Qatar", severity: 0, status: "low", sector: "utilities", influence: 0.75, isSuper: false },
+  { id: "MEW_KWT", label: "MEW Kuwait", type: "city", coord: { lat: 29.37, lng: 47.97 }, country: "Kuwait", severity: 0, status: "low", sector: "utilities", influence: 0.70, isSuper: false },
+  { id: "EWA_BHR", label: "EWA Bahrain", type: "city", coord: { lat: 26.22, lng: 50.58 }, country: "Bahrain", severity: 0, status: "low", sector: "utilities", influence: 0.60, isSuper: false },
+  { id: "NAMA_OMN", label: "Nama Group (Oman)", type: "city", coord: { lat: 23.59, lng: 58.54 }, country: "Oman", severity: 0, status: "low", sector: "utilities", influence: 0.60, isSuper: false },
+  { id: "DESAL_GCC", label: "GCC Desalination Network", type: "city", coord: { lat: 25.80, lng: 52.00 }, country: "International", severity: 0, status: "low", sector: "utilities", influence: 0.80, isSuper: false },
+];
+
+/* ── FOOD & SUPPLY CHAIN ── */
+const FOOD_SUPPLY: GraphNode[] = [
+  { id: "FOOD_IMPORT_GCC", label: "GCC Food Imports", type: "city", coord: { lat: 25.50, lng: 53.00 }, country: "International", severity: 0, status: "low", sector: "food_supply", influence: 0.80, isSuper: false },
+  { id: "COLD_CHAIN_UAE", label: "UAE Cold Chain Logistics", type: "city", coord: { lat: 25.01, lng: 55.10 }, country: "UAE", severity: 0, status: "low", sector: "food_supply", influence: 0.65, isSuper: false },
+  { id: "FOOD_SECURITY_KSA", label: "KSA Food Security (SFDA)", type: "city", coord: { lat: 24.73, lng: 46.66 }, country: "KSA", severity: 0, status: "low", sector: "food_supply", influence: 0.70, isSuper: false },
+];
+
 /* ── ALL NODES ── */
 export const ALL_GCC_NODES: GraphNode[] = [
   ...SOVEREIGNS,
@@ -150,6 +193,10 @@ export const ALL_GCC_NODES: GraphNode[] = [
   ...BANKING,
   ...INSURANCE,
   ...LOGISTICS,
+  ...CENTRAL_BANKS,
+  ...TOURISM,
+  ...UTILITIES,
+  ...FOOD_SUPPLY,
 ];
 
 /* ── Supernodes (top 10 by influence) ── */

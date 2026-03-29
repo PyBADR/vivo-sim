@@ -26,14 +26,14 @@ const CROSS_SOURCE_FACTOR = 0.15;             // Bonus per confirming signal
    How important is this country × sector combination to the GCC? */
 
 const COUNTRY_SECTOR_WEIGHT: Record<string, Record<string, number>> = {
-  KSA:         { energy: 1.0, aviation: 0.8, maritime: 0.7, finance: 0.9, insurance: 0.7, logistics: 0.6, government: 1.0 },
-  UAE:         { energy: 0.9, aviation: 0.95, maritime: 0.95, finance: 0.9, insurance: 0.7, logistics: 0.9, government: 0.9 },
-  Qatar:       { energy: 0.9, aviation: 0.85, maritime: 0.7, finance: 0.7, insurance: 0.5, logistics: 0.5, government: 0.8 },
-  Kuwait:      { energy: 0.8, aviation: 0.6, maritime: 0.5, finance: 0.6, insurance: 0.4, logistics: 0.4, government: 0.7 },
-  Bahrain:     { energy: 0.5, aviation: 0.5, maritime: 0.4, finance: 0.6, insurance: 0.4, logistics: 0.3, government: 0.6 },
-  Oman:        { energy: 0.6, aviation: 0.5, maritime: 0.6, finance: 0.4, insurance: 0.3, logistics: 0.4, government: 0.6 },
-  Iran:        { energy: 0.8, aviation: 0.3, maritime: 0.7, finance: 0.2, insurance: 0.1, logistics: 0.2, government: 0.5 },
-  International: { energy: 0.9, aviation: 0.5, maritime: 1.0, finance: 0.5, insurance: 0.3, logistics: 0.5, government: 0.3 },
+  KSA:         { energy: 1.0, aviation: 0.8, maritime: 0.7, finance: 0.9, insurance: 0.7, logistics: 0.6, government: 1.0, tourism: 0.75, utilities: 0.85, food_supply: 0.7, regulatory: 0.9, telecom: 0.6, military: 0.8, infrastructure: 0.7 },
+  UAE:         { energy: 0.9, aviation: 0.95, maritime: 0.95, finance: 0.9, insurance: 0.7, logistics: 0.9, government: 0.9, tourism: 0.95, utilities: 0.85, food_supply: 0.8, regulatory: 0.85, telecom: 0.7, military: 0.7, infrastructure: 0.8 },
+  Qatar:       { energy: 0.9, aviation: 0.85, maritime: 0.7, finance: 0.7, insurance: 0.5, logistics: 0.5, government: 0.8, tourism: 0.70, utilities: 0.80, food_supply: 0.65, regulatory: 0.75, telecom: 0.5, military: 0.5, infrastructure: 0.6 },
+  Kuwait:      { energy: 0.8, aviation: 0.6, maritime: 0.5, finance: 0.6, insurance: 0.4, logistics: 0.4, government: 0.7, tourism: 0.40, utilities: 0.75, food_supply: 0.65, regulatory: 0.65, telecom: 0.4, military: 0.5, infrastructure: 0.5 },
+  Bahrain:     { energy: 0.5, aviation: 0.5, maritime: 0.4, finance: 0.6, insurance: 0.4, logistics: 0.3, government: 0.6, tourism: 0.50, utilities: 0.65, food_supply: 0.60, regulatory: 0.60, telecom: 0.4, military: 0.3, infrastructure: 0.4 },
+  Oman:        { energy: 0.6, aviation: 0.5, maritime: 0.6, finance: 0.4, insurance: 0.3, logistics: 0.4, government: 0.6, tourism: 0.55, utilities: 0.65, food_supply: 0.55, regulatory: 0.55, telecom: 0.4, military: 0.4, infrastructure: 0.5 },
+  Iran:        { energy: 0.8, aviation: 0.3, maritime: 0.7, finance: 0.2, insurance: 0.1, logistics: 0.2, government: 0.5, tourism: 0.15, utilities: 0.50, food_supply: 0.40, regulatory: 0.30, telecom: 0.2, military: 0.7, infrastructure: 0.3 },
+  International: { energy: 0.9, aviation: 0.5, maritime: 1.0, finance: 0.5, insurance: 0.3, logistics: 0.5, government: 0.3, tourism: 0.50, utilities: 0.60, food_supply: 0.70, regulatory: 0.40, telecom: 0.3, military: 0.2, infrastructure: 0.4 },
 };
 
 function getCSW(country: string, sector: string): number {
@@ -60,6 +60,21 @@ export interface NodeImpactResult {
   confirmedBy: number;      // number of confirming signals
 }
 
+export interface SectorAggregation {
+  sector: string;
+  totalImpact: number;        // sum of all node impacts in sector
+  maxImpact: number;          // highest single node impact
+  nodeCount: number;          // nodes affected in this sector
+  topNode: string;            // most impacted node label
+}
+
+export interface PropagationExplanation {
+  summary: string;            // one-line causal summary
+  chain: string[];            // ordered causal chain labels
+  topDrivers: Array<{ nodeId: string; label: string; impact: number }>;
+  confidence: number;         // 0-1 based on path depth and coverage
+}
+
 export interface PropagationResult {
   affectedNodes: NodeImpactResult[];
   topVulnerabilities: NodeImpactResult[];  // sorted desc by impact
@@ -67,6 +82,8 @@ export interface PropagationResult {
   totalEnergy: number;
   maxDepth: number;
   timestamp: string;
+  sectorAggregation: SectorAggregation[];
+  explanation: PropagationExplanation;
 }
 
 /* ── Core Propagation ── */
@@ -93,7 +110,7 @@ export function propagate(
   // Seed the source
   const sourceNode = NODE_MAP.get(sourceNodeId);
   if (!sourceNode) {
-    return { affectedNodes: [], topVulnerabilities: [], propagationPaths: [], totalEnergy: 0, maxDepth: 0, timestamp: new Date().toISOString() };
+    return { affectedNodes: [], topVulnerabilities: [], propagationPaths: [], totalEnergy: 0, maxDepth: 0, timestamp: new Date().toISOString(), sectorAggregation: [], explanation: { summary: "No source node found", chain: [], topDrivers: [], confidence: 0 } };
   }
 
   const sourceCSW = getCSW(sourceNode.country, sourceNode.sector);
@@ -190,6 +207,12 @@ export function propagate(
   const propagationPaths = affectedNodes.map((r) => r.propagationPath);
   const totalEnergy = affectedNodes.reduce((sum, r) => sum + r.impactScore, 0);
 
+  // Sector aggregation
+  const sectorAggregation = computeSectorAggregation(affectedNodes);
+
+  // Explanation
+  const explanation = computeExplanation(affectedNodes, sectorAggregation, maxDepth);
+
   return {
     affectedNodes,
     topVulnerabilities,
@@ -197,7 +220,83 @@ export function propagate(
     totalEnergy,
     maxDepth,
     timestamp: new Date().toISOString(),
+    sectorAggregation,
+    explanation,
   };
+}
+
+/* ── Sector Aggregation ──
+   Groups affected nodes by sector and computes aggregate metrics.
+   Formula: sectorImpact = Σ(nodeImpact) for all nodes in sector */
+
+function computeSectorAggregation(affectedNodes: NodeImpactResult[]): SectorAggregation[] {
+  const sectorMap = new Map<string, { total: number; max: number; count: number; topLabel: string }>();
+
+  for (const node of affectedNodes) {
+    const existing = sectorMap.get(node.sector);
+    if (!existing) {
+      sectorMap.set(node.sector, { total: node.impactScore, max: node.impactScore, count: 1, topLabel: node.label });
+    } else {
+      existing.total += node.impactScore;
+      existing.count++;
+      if (node.impactScore > existing.max) {
+        existing.max = node.impactScore;
+        existing.topLabel = node.label;
+      }
+    }
+  }
+
+  return Array.from(sectorMap.entries())
+    .map(([sector, data]) => ({
+      sector,
+      totalImpact: Math.round(data.total * 1000) / 1000,
+      maxImpact: Math.round(data.max * 1000) / 1000,
+      nodeCount: data.count,
+      topNode: data.topLabel,
+    }))
+    .sort((a, b) => b.totalImpact - a.totalImpact);
+}
+
+/* ── Explanation Generator ──
+   Builds causal explanation from propagation results.
+   Confidence = f(depth, coverage, sector spread) */
+
+function computeExplanation(
+  affectedNodes: NodeImpactResult[],
+  sectorAgg: SectorAggregation[],
+  maxDepth: number
+): PropagationExplanation {
+  // Top 5 drivers by impact
+  const topDrivers = affectedNodes.slice(0, 5).map((n) => ({
+    nodeId: n.nodeId,
+    label: n.label,
+    impact: Math.round(n.impactScore * 100) / 100,
+  }));
+
+  // Build causal chain from the highest-impact node's path
+  const topNode = affectedNodes[0];
+  const chain = topNode
+    ? topNode.propagationPath.map((id) => {
+        const node = NODE_MAP.get(id);
+        return node ? node.label : id;
+      })
+    : [];
+
+  // Summary: "X → Y → Z causing N% impact across K sectors"
+  const sectorNames = sectorAgg.slice(0, 3).map((s) => s.sector).join(", ");
+  const topImpactPct = topNode ? Math.round(topNode.impactScore * 100) : 0;
+  const summary = topNode
+    ? `${topNode.label} (${topImpactPct}% impact) drives cascade across ${sectorNames} — ${affectedNodes.length} entities affected at depth ${maxDepth}`
+    : "No significant propagation detected";
+
+  // Confidence formula:
+  // confidence = min(1, (affectedNodes/20) × 0.3 + (maxDepth/6) × 0.3 + (sectors/5) × 0.4)
+  const nodeCoverage = Math.min(affectedNodes.length / 20, 1) * 0.3;
+  const depthCoverage = Math.min(maxDepth / MAX_PROPAGATION_DEPTH, 1) * 0.3;
+  const sectorCoverage = Math.min(sectorAgg.length / 5, 1) * 0.4;
+  const confidence = Math.round(Math.min(1, nodeCoverage + depthCoverage + sectorCoverage) * 100) / 100;
+
+  return { summary, chain, topDrivers, confidence };
 }
 
 /* ── Multi-Signal Propagation ──
@@ -234,6 +333,9 @@ export function propagateMultiSignal(
     (a, b) => b.impactScore - a.impactScore
   );
 
+  const sectorAggregation = computeSectorAggregation(affectedNodes);
+  const explanation = computeExplanation(affectedNodes, sectorAggregation, maxDepth);
+
   return {
     affectedNodes,
     topVulnerabilities: affectedNodes.slice(0, 15),
@@ -241,5 +343,7 @@ export function propagateMultiSignal(
     totalEnergy: affectedNodes.reduce((sum, r) => sum + r.impactScore, 0),
     maxDepth,
     timestamp: new Date().toISOString(),
+    sectorAggregation,
+    explanation,
   };
 }

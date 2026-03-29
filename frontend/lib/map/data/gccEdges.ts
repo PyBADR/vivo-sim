@@ -185,6 +185,86 @@ export const ALL_GCC_EDGES: GraphEdge[] = [
   e("TADAWUL", "DFM", "amplifies", "finance", 0.65, 0.40, 0.50, 2, true),
   e("TADAWUL", "QSE", "amplifies", "finance", 0.55, 0.30, 0.40, 2, true),
   e("TADAWUL", "BOURSA_KWT", "amplifies", "finance", 0.50, 0.30, 0.35, 3, true),
+
+  /* ── TOURISM ↔ AIRPORTS (critical dependency) ── */
+  e("DXB", "TOURISM_UAE", "supplies", "tourism", 0.90, 0.85, 0.85, 2),
+  e("AUH", "TOURISM_UAE", "supplies", "tourism", 0.70, 0.60, 0.65, 2),
+  e("RUH", "TOURISM_KSA", "supplies", "tourism", 0.75, 0.70, 0.70, 2),
+  e("JED", "TOURISM_KSA", "supplies", "tourism", 0.80, 0.75, 0.75, 2),
+  e("DOH", "TOURISM_QAT", "supplies", "tourism", 0.85, 0.80, 0.80, 2),
+  e("BAH", "TOURISM_BHR", "supplies", "tourism", 0.80, 0.75, 0.75, 2),
+  e("MCT", "TOURISM_OMN", "supplies", "tourism", 0.75, 0.70, 0.70, 2),
+  e("KWI", "TOURISM_KWT", "supplies", "tourism", 0.70, 0.65, 0.65, 2),
+
+  /* ── TOURISM → ECONOMY (hospitality spillover) ── */
+  e("TOURISM_UAE", "DFM", "influences", "tourism", 0.65, 0.40, 0.50, 6),
+  e("TOURISM_KSA", "TADAWUL", "influences", "tourism", 0.60, 0.35, 0.45, 6),
+  e("TOURISM_QAT", "QSE", "influences", "tourism", 0.55, 0.30, 0.40, 6),
+
+  /* ── CENTRAL BANKS → FINANCE (regulatory stabilization) ── */
+  e("SAMA", "TADAWUL", "influences", "regulatory", 0.85, 0.55, 0.40, 0),
+  e("SAMA", "SNB", "influences", "regulatory", 0.80, 0.50, 0.35, 0),
+  e("SAMA", "RAJHI", "influences", "regulatory", 0.75, 0.45, 0.30, 0),
+  e("CBUAE", "DFM", "influences", "regulatory", 0.80, 0.50, 0.40, 0),
+  e("CBUAE", "FAB", "influences", "regulatory", 0.75, 0.45, 0.35, 0),
+  e("CBUAE", "ENBD", "influences", "regulatory", 0.70, 0.40, 0.30, 0),
+  e("CBK", "BOURSA_KWT", "influences", "regulatory", 0.75, 0.45, 0.35, 0),
+  e("CBK", "NBK", "influences", "regulatory", 0.70, 0.40, 0.30, 0),
+  e("QCB", "QSE", "influences", "regulatory", 0.75, 0.45, 0.35, 0),
+  e("QCB", "QNB", "influences", "regulatory", 0.70, 0.40, 0.30, 0),
+  e("CBB", "BSE_BHR", "influences", "regulatory", 0.65, 0.40, 0.30, 0),
+  e("CBO", "MSM_OMN", "influences", "regulatory", 0.65, 0.40, 0.30, 0),
+
+  /* ── CENTRAL BANKS → INSURANCE (regulatory oversight) ── */
+  e("SAMA", "TAWUNIYA", "influences", "regulatory", 0.70, 0.40, 0.35, 0),
+  e("SAMA", "BUPA_KSA", "influences", "regulatory", 0.65, 0.35, 0.30, 0),
+  e("CBUAE", "OIC", "influences", "regulatory", 0.65, 0.35, 0.30, 0),
+
+  /* ── UTILITIES: Energy → Electricity ── */
+  e("ARAMCO", "SEC", "supplies", "utilities", 0.80, 0.75, 0.80, 4),
+  e("ADNOC", "DEWA", "supplies", "utilities", 0.80, 0.70, 0.75, 3),
+  e("ADNOC", "ADDC", "supplies", "utilities", 0.75, 0.65, 0.70, 3),
+  e("QATARGAS", "KAHRAMAA", "supplies", "utilities", 0.85, 0.80, 0.85, 2),
+  e("KPC", "MEW_KWT", "supplies", "utilities", 0.75, 0.70, 0.75, 3),
+  e("BAPCO", "EWA_BHR", "supplies", "utilities", 0.70, 0.65, 0.70, 3),
+  e("PDO", "NAMA_OMN", "supplies", "utilities", 0.70, 0.65, 0.70, 3),
+
+  /* ── UTILITIES → DESALINATION (electricity powers water) ── */
+  e("SEC", "DESAL_GCC", "supplies", "utilities", 0.70, 0.60, 0.70, 2),
+  e("DEWA", "DESAL_GCC", "supplies", "utilities", 0.75, 0.65, 0.75, 1),
+  e("KAHRAMAA", "DESAL_GCC", "supplies", "utilities", 0.65, 0.55, 0.65, 2),
+  e("MEW_KWT", "DESAL_GCC", "supplies", "utilities", 0.70, 0.60, 0.70, 2),
+
+  /* ── UTILITIES → ECONOMY (electricity stress → business disruption) ── */
+  e("SEC", "TADAWUL", "stresses", "utilities", 0.60, 0.40, 0.50, 6),
+  e("DEWA", "DFM", "stresses", "utilities", 0.65, 0.45, 0.55, 4),
+  e("KAHRAMAA", "QSE", "stresses", "utilities", 0.55, 0.35, 0.45, 6),
+
+  /* ── UTILITIES → TOURISM (power/water outage → hospitality impact) ── */
+  e("DEWA", "TOURISM_UAE", "stresses", "utilities", 0.70, 0.55, 0.65, 4),
+  e("SEC", "TOURISM_KSA", "stresses", "utilities", 0.60, 0.45, 0.55, 6),
+  e("KAHRAMAA", "TOURISM_QAT", "stresses", "utilities", 0.60, 0.45, 0.55, 4),
+
+  /* ── FOOD SUPPLY: Ports → Food imports ── */
+  e("JEBEL_ALI", "FOOD_IMPORT_GCC", "supplies", "food_supply", 0.90, 0.85, 0.80, 2),
+  e("DAMMAM_PORT", "FOOD_IMPORT_GCC", "supplies", "food_supply", 0.75, 0.65, 0.70, 4),
+  e("JEDDAH_PORT", "FOOD_IMPORT_GCC", "supplies", "food_supply", 0.70, 0.60, 0.65, 4),
+  e("SHUWAIKH", "FOOD_IMPORT_GCC", "supplies", "food_supply", 0.65, 0.55, 0.60, 3),
+  e("HAMAD_PORT", "FOOD_IMPORT_GCC", "supplies", "food_supply", 0.60, 0.50, 0.55, 3),
+
+  /* ── FOOD → Cold Chain → Downstream ── */
+  e("FOOD_IMPORT_GCC", "COLD_CHAIN_UAE", "supplies", "food_supply", 0.80, 0.70, 0.75, 2),
+  e("FOOD_IMPORT_GCC", "FOOD_SECURITY_KSA", "supplies", "food_supply", 0.75, 0.65, 0.70, 4),
+
+  /* ── FOOD → SOCIAL STABILITY ── */
+  e("FOOD_IMPORT_GCC", "GOV_KSA", "stresses", "food_supply", 0.55, 0.35, 0.45, 12),
+  e("FOOD_IMPORT_GCC", "GOV_UAE", "stresses", "food_supply", 0.50, 0.30, 0.40, 12),
+
+  /* ── HORMUZ → ENERGY EXPORTS (explicit oil/gas dependency) ── */
+  e("HORMUZ", "ARAMCO", "stresses", "energy", 0.80, 0.60, 0.70, 4),
+  e("HORMUZ", "ADNOC", "stresses", "energy", 0.85, 0.65, 0.75, 2),
+  e("HORMUZ", "KPC", "stresses", "energy", 0.75, 0.55, 0.65, 4),
+  e("HORMUZ", "QATARGAS", "stresses", "energy", 0.80, 0.60, 0.70, 3),
 ];
 
 /* ── Edge Lookup ── */
