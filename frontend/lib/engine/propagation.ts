@@ -154,9 +154,12 @@ export function propagate(
     const targetNode = NODE_MAP.get(item.nodeId);
     if (!targetNode) continue;
 
-    // Apply country-sector weight and time decay
+    // Apply node sensitivity, damping, country-sector weight, and time decay
+    // Formula: impact × node.sensitivity × (1 - node.dampingFactor) × CSW × timeDecay
     const csw = getCSW(targetNode.country, targetNode.sector);
-    const decayedImpact = item.impact * csw * timeDecay(item.latency + hoursElapsed);
+    const nodeSens = targetNode.sensitivity ?? 0.7;
+    const nodeDamp = targetNode.dampingFactor ?? 0.2;
+    const decayedImpact = item.impact * nodeSens * (1 - nodeDamp) * csw * timeDecay(item.latency + hoursElapsed);
     const finalImpact = Math.min(decayedImpact, 1);
 
     if (finalImpact < MIN_IMPACT_THRESHOLD) continue;
@@ -188,9 +191,11 @@ export function propagate(
     const nextEdges = ALL_GCC_EDGES.filter((e) => e.source_id === item.nodeId);
     for (const edge of nextEdges) {
       if (item.path.includes(edge.target_id)) continue; // No cycles
+      // Polarity: +1 amplifies (disruption propagates), -1 dampens (stabilization reduces impact by 50%)
+      const polarityMod = edge.polarity === -1 ? 0.5 : 1.0;
       queue.push({
         nodeId: edge.target_id,
-        impact: finalImpact * edge.weight * edge.dependency * edge.sensitivity,
+        impact: finalImpact * edge.weight * edge.dependency * edge.sensitivity * polarityMod,
         path: [...item.path, edge.target_id],
         depth: item.depth + 1,
         latency: item.latency + edge.latency_hours,
