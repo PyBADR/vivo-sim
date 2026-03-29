@@ -17,20 +17,22 @@ import {
   Activity,
   Radio,
   Shield,
+  Network,
 } from 'lucide-react'
 
 import GraphPanel from '@/components/graph/GraphPanel'
 import TimelinePanel from '@/components/simulation/TimelinePanel'
 import ReportPanel from '@/components/report/ReportPanel'
+import PropagationInsightPanel from '@/components/report/PropagationInsightPanel'
 import ChatPanel from '@/components/chat/ChatPanel'
 import {
-  mockScenarios,
   mockGraphNodes,
   mockGraphEdges,
   mockSimulationSteps,
   mockReport,
   mockChatMessages,
 } from '@/lib/mock-data'
+import { useScenarioEngine } from '@/lib/hooks/useScenarioEngine'
 
 /* ──────────────────────────────────────────────
    Processing pipeline steps
@@ -39,25 +41,27 @@ const processingSteps = [
   { label: 'Parsing scenario input' },
   { label: 'Extracting entities' },
   { label: 'Building relationship graph' },
-  { label: 'Generating agent personas' },
-  { label: 'Running simulation engine' },
-  { label: 'Compiling intelligence brief' },
+  { label: 'Running propagation engine' },
+  { label: 'Computing sector aggregation' },
+  { label: 'Generating intelligence brief' },
 ]
 
+/* ── Right sidebar tab ── */
+type InsightTab = 'brief' | 'propagation'
+
 export default function DemoPage() {
-  // ── State ──
-  const [selectedScenario, setSelectedScenario] = useState(mockScenarios[0])
-  const [scenarioTitle, setScenarioTitle] = useState(mockScenarios[0].title)
-  const [scenarioText, setScenarioText] = useState(mockScenarios[0].scenario)
-  const [country, setCountry] = useState(mockScenarios[0].country)
-  const [category, setCategory] = useState(mockScenarios[0].category)
-  const [isRunning, setIsRunning] = useState(false)
-  const [hasResults, setHasResults] = useState(false)
+  // ── Real scenario engine ──
+  const engine = useScenarioEngine()
+
+  // ── Local UI state ──
+  const [isAnimating, setIsAnimating] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [processingStep, setProcessingStep] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
-  const [runId, setRunId] = useState('—')
-  const [runTimestamp, setRunTimestamp] = useState('—')
+  const [insightTab, setInsightTab] = useState<InsightTab>('propagation')
+
+  const isRunning = isAnimating
+  const hasResults = engine.state === 'complete'
 
   // ── Mobile detection ──
   useEffect(() => {
@@ -67,55 +71,42 @@ export default function DemoPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // ── Simulation processing ──
+  // ── Processing animation ──
   useEffect(() => {
-    if (!isRunning) return
+    if (!isAnimating) return
     const interval = setInterval(() => {
       setProcessingStep(prev => {
         if (prev < processingSteps.length - 1) return prev + 1
         return prev
       })
-    }, 700)
+    }, 500)
     return () => clearInterval(interval)
-  }, [isRunning])
+  }, [isAnimating])
 
+  // ── When animation reaches last step, trigger real engine ──
   useEffect(() => {
-    if (processingStep === processingSteps.length - 1 && isRunning) {
+    if (processingStep === processingSteps.length - 1 && isAnimating) {
       const timeout = setTimeout(() => {
-        setIsRunning(false)
-        setHasResults(true)
+        engine.run()
+        setIsAnimating(false)
         setCurrentStep(0)
-      }, 600)
+      }, 400)
       return () => clearTimeout(timeout)
     }
-  }, [processingStep, isRunning])
+  }, [processingStep, isAnimating])
 
   // ── Handlers ──
-  const handleScenarioSelect = (scenario: typeof mockScenarios[0]) => {
-    setSelectedScenario(scenario)
-    setScenarioTitle(scenario.title)
-    setScenarioText(scenario.scenario)
-    setCountry(scenario.country)
-    setCategory(scenario.category)
-    setHasResults(false)
-    setCurrentStep(0)
+  const handleRunSimulation = () => {
+    setIsAnimating(true)
+    setProcessingStep(0)
+    engine.reset()
   }
 
   const handleReset = () => {
-    setHasResults(false)
+    setIsAnimating(false)
     setCurrentStep(0)
     setProcessingStep(0)
-    setIsRunning(false)
-    setRunId('—')
-    setRunTimestamp('—')
-  }
-
-  const handleRunSimulation = () => {
-    setIsRunning(true)
-    setProcessingStep(0)
-    setHasResults(false)
-    setRunId(`SIM-${Math.random().toString(36).substring(2, 8).toUpperCase()}`)
-    setRunTimestamp(new Date().toLocaleTimeString('en-US', { hour12: false }))
+    engine.reset()
   }
 
   // ── System status ──
@@ -163,7 +154,7 @@ export default function DemoPage() {
             <ArrowLeft className="w-3.5 h-3.5" />
           </Link>
           <div className="w-px h-5 bg-ds-border" />
-          <span className="text-micro font-semibold text-ds-text tracking-tight">DEEVO SIM</span>
+          <span className="text-micro font-semibold text-ds-text tracking-tight">VIVO SIM</span>
           <span className="text-micro text-ds-text-dim font-mono">/</span>
           <span className="text-micro text-ds-text-muted font-mono">Control Room</span>
         </div>
@@ -176,14 +167,14 @@ export default function DemoPage() {
               {systemStatus.label}
             </span>
           </div>
-          {runId !== '—' && (
+          {engine.runId !== '—' && (
             <>
               <span className="text-nano text-ds-text-dim">·</span>
               <span className="text-nano font-mono text-ds-text-dim">
                 <Clock size={10} className="inline mr-1 -mt-0.5" />
-                {runTimestamp}
+                {engine.runTimestamp}
               </span>
-              <span className="text-nano font-mono text-ds-text-dim">{runId}</span>
+              <span className="text-nano font-mono text-ds-text-dim">{engine.runId}</span>
             </>
           )}
         </div>
@@ -191,7 +182,7 @@ export default function DemoPage() {
         {/* Right: Scenario meta */}
         <div className="flex items-center gap-3 min-w-0">
           <span className="text-micro text-ds-text-muted truncate max-w-[200px] font-mono">
-            {scenarioTitle}
+            {engine.activeScenario.title.en}
           </span>
           <button className="p-1.5 hover:bg-ds-card rounded-md transition-colors text-ds-text-dim hover:text-ds-text">
             <Settings className="w-3.5 h-3.5" />
@@ -206,51 +197,24 @@ export default function DemoPage() {
         <div className="w-[280px] bg-ds-surface border-r border-ds-border overflow-y-auto flex flex-col">
           <div className="p-5 space-y-5 flex flex-col">
 
-            {/* Scenario Input */}
+            {/* Scenario Info */}
             <div>
               <h3 className="text-nano uppercase tracking-[0.15em] text-ds-text-dim font-semibold mb-3 flex items-center gap-2">
                 <Radio size={10} />
-                Scenario Input
+                Active Scenario
               </h3>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  value={scenarioTitle}
-                  onChange={(e) => setScenarioTitle(e.target.value)}
-                  placeholder="Scenario title"
-                  className="ds-input text-micro"
-                />
-                <textarea
-                  value={scenarioText}
-                  onChange={(e) => setScenarioText(e.target.value)}
-                  placeholder="Describe the scenario..."
-                  dir="auto"
-                  className="ds-input min-h-[100px] resize-none text-micro"
-                />
-                <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="ds-select text-micro"
-                >
-                  <option value="Saudi Arabia">Saudi Arabia</option>
-                  <option value="Kuwait">Kuwait</option>
-                  <option value="UAE">UAE</option>
-                  <option value="Bahrain">Bahrain</option>
-                  <option value="Oman">Oman</option>
-                  <option value="Qatar">Qatar</option>
-                  <option value="GCC">GCC</option>
-                </select>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="ds-select text-micro"
-                >
-                  <option value="economy">Economy</option>
-                  <option value="public sentiment">Public Sentiment</option>
-                  <option value="business reaction">Business Reaction</option>
-                  <option value="technology">Technology</option>
-                  <option value="policy">Policy</option>
-                </select>
+              <div className="bg-ds-card rounded-ds-lg p-3 border border-ds-border space-y-2">
+                <p className="text-micro font-medium text-ds-text">
+                  {engine.activeScenario.title.en}
+                </p>
+                <p className="text-[11px] text-ds-text-muted leading-relaxed" dir="auto">
+                  {engine.activeScenario.description.ar}
+                </p>
+                <div className="flex items-center gap-2 text-[10px] text-ds-text-dim font-mono">
+                  <span>{engine.activeScenario.signals.length} signals</span>
+                  <span>·</span>
+                  <span>{engine.activeScenario.expectedDuration}h window</span>
+                </div>
               </div>
             </div>
 
@@ -323,29 +287,32 @@ export default function DemoPage() {
             {/* Divider */}
             <div className="ds-divider" />
 
-            {/* Preset Scenarios */}
+            {/* Preset Scenarios — from real ALL_SCENARIOS */}
             <div>
               <h3 className="text-nano uppercase tracking-[0.15em] text-ds-text-dim font-semibold mb-3 flex items-center gap-2">
                 <Shield size={10} />
-                Presets
+                GCC Scenarios ({engine.scenarios.length})
               </h3>
               <div className="space-y-2">
-                {mockScenarios.slice(0, 3).map((scenario) => (
+                {engine.scenarios.map((scenario) => (
                   <button
                     key={scenario.id}
-                    onClick={() => handleScenarioSelect(scenario)}
+                    onClick={() => { engine.selectScenario(scenario); handleReset() }}
                     className={`w-full text-left px-3.5 py-3 rounded-ds-lg border transition-all duration-200 ${
-                      selectedScenario.id === scenario.id
+                      engine.activeScenario.id === scenario.id
                         ? 'bg-ds-accent/8 border-ds-accent/25'
                         : 'bg-ds-bg-alt border-ds-border hover:border-ds-border-hover hover:bg-ds-card/40'
                     }`}
                   >
                     <div className="text-micro font-medium text-ds-text truncate">
-                      {scenario.title}
+                      {scenario.title.en}
+                    </div>
+                    <div className="text-[10px] text-ds-text-dim font-mono mt-1 truncate" dir="auto">
+                      {scenario.title.ar}
                     </div>
                     <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-ds-text-dim font-mono">
                       <Globe className="w-3 h-3" />
-                      {scenario.country}
+                      {scenario.signals.length} signals · {scenario.expectedDuration}h
                     </div>
                   </button>
                 ))}
@@ -363,10 +330,10 @@ export default function DemoPage() {
                 <div className="absolute inset-0 ds-grid-bg opacity-20" />
                 <div className="relative text-center">
                   <div className="w-12 h-12 rounded-full bg-ds-surface-raised border border-ds-border flex items-center justify-center mx-auto mb-3">
-                    <Circle className="w-5 h-5 text-ds-text-dim" />
+                    <Network className="w-5 h-5 text-ds-text-dim" />
                   </div>
                   <p className="text-caption text-ds-text-dim">
-                    Run a simulation to generate the entity graph
+                    Select a GCC scenario and run the propagation engine
                   </p>
                   <p className="text-nano text-ds-text-dim mt-1 font-mono">AWAITING INPUT</p>
                 </div>
@@ -378,9 +345,9 @@ export default function DemoPage() {
                 <div className="relative text-center">
                   <Loader2 className="w-10 h-10 mx-auto mb-3 text-ds-accent animate-spin" />
                   <p className="text-caption text-ds-text-muted">
-                    Generating entity graph...
+                    Computing impact propagation across GCC graph...
                   </p>
-                  <p className="text-nano text-ds-accent font-mono mt-1">SIGNAL PROPAGATION ACTIVE</p>
+                  <p className="text-nano text-ds-accent font-mono mt-1">BFS PROPAGATION ACTIVE</p>
                 </div>
               </div>
             )}
@@ -412,8 +379,8 @@ export default function DemoPage() {
           </div>
         </div>
 
-        {/* ═══ RIGHT SIDEBAR — Intelligence Brief + Analyst ═══ */}
-        <div className="w-[360px] bg-ds-surface border-l border-ds-border overflow-y-auto flex flex-col">
+        {/* ═══ RIGHT SIDEBAR — Intelligence Brief + Propagation Analysis ═══ */}
+        <div className="w-[380px] bg-ds-surface border-l border-ds-border overflow-y-auto flex flex-col">
           <div className="p-4 space-y-4 flex flex-col h-full">
 
             {/* Action buttons */}
@@ -436,12 +403,44 @@ export default function DemoPage() {
               </div>
             )}
 
-            {/* Report / Intelligence Brief */}
+            {/* Tab selector */}
+            {hasResults && (
+              <div className="flex gap-1 p-1 bg-ds-bg-alt rounded-ds-lg border border-ds-border flex-shrink-0">
+                <button
+                  onClick={() => setInsightTab('propagation')}
+                  className={`flex-1 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-ds transition-all ${
+                    insightTab === 'propagation'
+                      ? 'bg-ds-accent/10 text-ds-accent border border-ds-accent/20'
+                      : 'text-ds-text-dim hover:text-ds-text-secondary border border-transparent'
+                  }`}
+                >
+                  Propagation
+                </button>
+                <button
+                  onClick={() => setInsightTab('brief')}
+                  className={`flex-1 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-ds transition-all ${
+                    insightTab === 'brief'
+                      ? 'bg-ds-accent/10 text-ds-accent border border-ds-accent/20'
+                      : 'text-ds-text-dim hover:text-ds-text-secondary border border-transparent'
+                  }`}
+                >
+                  Brief
+                </button>
+              </div>
+            )}
+
+            {/* Panels */}
             <div className="flex-shrink-0">
-              {!hasResults && (
+              {!hasResults && insightTab === 'propagation' && (
+                <PropagationInsightPanel result={null} />
+              )}
+              {!hasResults && insightTab === 'brief' && (
                 <ReportPanel report={null} />
               )}
-              {hasResults && (
+              {hasResults && insightTab === 'propagation' && (
+                <PropagationInsightPanel result={engine.result} />
+              )}
+              {hasResults && insightTab === 'brief' && (
                 <ReportPanel report={mockReport} />
               )}
             </div>
@@ -456,7 +455,7 @@ export default function DemoPage() {
                         {
                           id: '1',
                           role: 'assistant' as const,
-                          content: 'Run a simulation to activate the analyst interface.',
+                          content: 'Select a GCC scenario and run the propagation engine to activate the analyst.',
                         },
                       ]
                 }
