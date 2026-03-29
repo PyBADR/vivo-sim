@@ -57,6 +57,14 @@ export interface DemoResult {
   decisionClarity: DecisionClarityResult;
   insuranceViz: InsuranceVisualizationResult;
   nodeCoords: Map<string, { lat: number; lng: number }>;
+  /* ── Mathematical Output Fields ── */
+  runId: string;                    // unique run identifier for traceability
+  totalLoss: number;                // estimated total system impact energy
+  affectedSectors: string[];        // list of impacted sectors
+  topDrivers: Array<{ nodeId: string; label: string; impact: number }>;
+  propagationChain: string[];       // causal chain labels
+  confidence: number;               // 0-1 model confidence
+  explanation: string;              // human-readable causal summary
 }
 
 /* ── Gulf Airspace Disruption ──
@@ -429,6 +437,16 @@ export function runDemoScenario(scenario: DemoScenario = GULF_AIRSPACE_DISRUPTIO
     normalizedTime: ev.hour / scenario.expectedDuration,
   }));
 
+  // Extract mathematical output fields from propagation result
+  const { sectorAggregation, explanation: propExplanation } = propagationResult;
+  const runId = `VIVO-${scenario.id}-${Date.now().toString(36)}`;
+  const totalLoss = propagationResult.totalEnergy;
+  const affectedSectors = sectorAggregation.map((s) => s.sector);
+  const topDrivers = propExplanation.topDrivers;
+  const propagationChain = propExplanation.chain;
+  const confidence = propExplanation.confidence;
+  const explanationText = propExplanation.summary;
+
   return {
     scenario,
     frames,
@@ -441,5 +459,12 @@ export function runDemoScenario(scenario: DemoScenario = GULF_AIRSPACE_DISRUPTIO
     decisionClarity,
     insuranceViz,
     nodeCoords,
+    runId,
+    totalLoss,
+    affectedSectors,
+    topDrivers,
+    propagationChain,
+    confidence,
+    explanation: explanationText,
   };
 }

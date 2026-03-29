@@ -26,7 +26,26 @@ export interface GraphEdge {
   sensitivity: number;  // 0-1 (how much disruption propagates)
   latency_hours: number;
   cross_border: boolean;
+  /* ── Mathematical Edge Properties ── */
+  label: string;        // human-readable relationship description
+  polarity: 1 | -1;    // +1 = amplifying/positive, -1 = dampening/stabilizing
 }
+
+/* ── Edge type → label template & polarity mapping ──
+   Polarity: +1 = amplifying (disruption propagates forward)
+             -1 = dampening (stabilizes/reduces impact)  */
+const EDGE_TYPE_META: Record<EdgeType, { labelTemplate: string; polarity: 1 | -1 }> = {
+  depends_on:    { labelTemplate: "depends on",    polarity: 1 },
+  routes_through:{ labelTemplate: "routes through", polarity: 1 },
+  exports_to:    { labelTemplate: "exports to",     polarity: 1 },
+  finances:      { labelTemplate: "finances",       polarity: 1 },
+  insures:       { labelTemplate: "insures",        polarity: -1 },  // insurance stabilizes
+  influences:    { labelTemplate: "influences",     polarity: 1 },
+  amplifies:     { labelTemplate: "amplifies",      polarity: 1 },
+  stresses:      { labelTemplate: "stresses",       polarity: 1 },
+  supplies:      { labelTemplate: "supplies",       polarity: 1 },
+  operates_at:   { labelTemplate: "operates at",    polarity: 1 },
+};
 
 let _eid = 0;
 function e(
@@ -40,6 +59,7 @@ function e(
   latency_hours: number,
   cross_border = false
 ): GraphEdge {
+  const meta = EDGE_TYPE_META[edge_type];
   return {
     edge_id: `E${++_eid}`,
     source_id,
@@ -51,6 +71,8 @@ function e(
     sensitivity,
     latency_hours,
     cross_border,
+    label: `${source_id} ${meta.labelTemplate} ${target_id}`,
+    polarity: meta.polarity,
   };
 }
 
