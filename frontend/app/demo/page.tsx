@@ -28,7 +28,6 @@ import ReportPanel from '@/components/report/ReportPanel'
 import PropagationInsightPanel from '@/components/report/PropagationInsightPanel'
 import ChatPanel from '@/components/chat/ChatPanel'
 import {
-  mockSimulationSteps,
   mockChatMessages,
 } from '@/lib/mock-data'
 import { useScenarioEngine } from '@/lib/hooks/useScenarioEngine'
@@ -191,6 +190,35 @@ export default function DemoPage() {
 
     return { graphNodes: nodes, graphEdges: edges }
   }, [engine.result])
+
+  // ── Derive timeline steps from engine frames + narrative events ──
+  const derivedTimelineSteps = useMemo(() => {
+    if (!engine.result) return null
+    const { frames, narrativeEvents } = engine.result
+    // Sample 4 evenly-spaced frames
+    const frameCount = frames.length
+    if (frameCount === 0) return null
+    const indices = [0, Math.floor(frameCount * 0.33), Math.floor(frameCount * 0.66), frameCount - 1]
+    return indices.map((fi, stepIdx) => {
+      const f = frames[fi]
+      // Find narrative events near this frame's hour
+      const nearEvents = narrativeEvents.filter(ne =>
+        Math.abs(ne.hour - f.hoursElapsed) <= (engine.result!.scenario.expectedDuration / 4)
+      )
+      const eventLabels = nearEvents.map(ne => isAr ? ne.title.ar : ne.title.en)
+      const summary = nearEvents.length > 0
+        ? (isAr ? nearEvents[0].description.ar : nearEvents[0].description.en)
+        : `${f.affectedCount} ${isAr ? 'عقدة متأثرة' : 'nodes affected'}, ${isAr ? 'طاقة:' : 'energy:'} ${f.totalEnergy.toFixed(1)}`
+      return {
+        step: stepIdx + 1,
+        label: `t${stepIdx + 1} — ${Math.round(f.hoursElapsed)}h`,
+        summary,
+        sentiment_score: 1 - f.maxImpact, // inverse: high impact = low sentiment
+        visibility_score: Math.min(f.totalEnergy / 8, 1),
+        events: eventLabels.slice(0, 3),
+      }
+    })
+  }, [engine.result, isAr])
 
   // ── Mobile detection ──
   useEffect(() => {
@@ -542,9 +570,9 @@ export default function DemoPage() {
                 <span className="text-caption text-ds-text-muted font-mono">{lc(copy.building, lang)}</span>
               </div>
             )}
-            {hasResults && (
+            {hasResults && derivedTimelineSteps && (
               <TimelinePanel
-                steps={mockSimulationSteps}
+                steps={derivedTimelineSteps}
                 activeStep={currentStep}
                 onStepChange={setCurrentStep}
               />
