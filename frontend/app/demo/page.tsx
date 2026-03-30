@@ -19,10 +19,10 @@ import {
   Shield,
   Network,
   Languages,
-  MapPin,
 } from 'lucide-react'
 
 import GraphPanel from '@/components/graph/GraphPanel'
+import DemoGlobe from '@/components/globe/DemoGlobe'
 import TimelinePanel from '@/components/simulation/TimelinePanel'
 import ReportPanel from '@/components/report/ReportPanel'
 import PropagationInsightPanel from '@/components/report/PropagationInsightPanel'
@@ -65,6 +65,7 @@ const copy = {
                     ar: 'تتطلب غرفة التحكم شاشة سطح مكتب لتجربة الاستخبارات الكاملة.' },
   backHome:       { en: 'Back to Home',                 ar: 'العودة للرئيسية' },
   globeView:      { en: 'Globe View',                   ar: 'عرض الكرة الأرضية' },
+  graphView:      { en: 'Graph View',                   ar: 'عرض الشبكة' },
   presets:        { en: 'Presets',                       ar: 'سيناريوهات مسبقة' },
 }
 
@@ -100,6 +101,7 @@ export default function DemoPage() {
   const [processingStep, setProcessingStep] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
   const [insightTab, setInsightTab] = useState<InsightTab>('propagation')
+  const [viewMode, setViewMode] = useState<'graph' | 'globe'>('graph')
 
   const isRunning = isAnimating
   const hasResults = engine.state === 'complete'
@@ -311,13 +313,13 @@ export default function DemoPage() {
           <span className="text-micro text-ds-text-muted truncate max-w-[180px] font-mono" dir="auto">
             {isAr ? engine.activeScenario.title.ar : engine.activeScenario.title.en}
           </span>
-          <Link
-            href="/command-center"
+          <button
+            onClick={() => setViewMode(viewMode === 'graph' ? 'globe' : 'graph')}
             className="p-1.5 hover:bg-ds-card rounded-md transition-colors text-ds-text-dim hover:text-ds-accent flex items-center gap-1"
-            title={lc(copy.globeView, lang)}
+            title={viewMode === 'graph' ? lc(copy.globeView, lang) : lc(copy.graphView, lang)}
           >
-            <MapPin className="w-3.5 h-3.5" />
-          </Link>
+            {viewMode === 'graph' ? <Globe className="w-3.5 h-3.5" /> : <Network className="w-3.5 h-3.5" />}
+          </button>
           <button
             onClick={toggle}
             className="px-2 py-1 rounded-md text-[10px] font-mono font-bold border border-ds-border hover:border-ds-accent/40 hover:text-ds-accent transition-all text-ds-text-dim"
@@ -461,27 +463,44 @@ export default function DemoPage() {
               </div>
             </div>
 
-            {/* Globe View Link */}
-            <Link
-              href="/command-center"
-              className="w-full ds-btn-secondary flex items-center justify-center gap-2 text-micro"
-            >
-              <MapPin className="w-3.5 h-3.5" />
-              {lc(copy.globeView, lang)}
-            </Link>
+            {/* View Mode Toggle: Graph ↔ Globe */}
+            <div className="flex gap-1 p-1 bg-ds-bg-alt rounded-ds-lg border border-ds-border">
+              <button
+                onClick={() => setViewMode('graph')}
+                className={`flex-1 py-1.5 text-[10px] font-mono uppercase tracking-wider rounded-ds transition-all flex items-center justify-center gap-1.5 ${
+                  viewMode === 'graph'
+                    ? 'bg-ds-accent/10 text-ds-accent border border-ds-accent/20'
+                    : 'text-ds-text-dim hover:text-ds-text-secondary border border-transparent'
+                }`}
+              >
+                <Network className="w-3 h-3" />
+                {lc(copy.graphView, lang)}
+              </button>
+              <button
+                onClick={() => setViewMode('globe')}
+                className={`flex-1 py-1.5 text-[10px] font-mono uppercase tracking-wider rounded-ds transition-all flex items-center justify-center gap-1.5 ${
+                  viewMode === 'globe'
+                    ? 'bg-ds-accent/10 text-ds-accent border border-ds-accent/20'
+                    : 'text-ds-text-dim hover:text-ds-text-secondary border border-transparent'
+                }`}
+              >
+                <Globe className="w-3 h-3" />
+                {lc(copy.globeView, lang)}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ═══ CENTER — Graph + Timeline (primary focus) ═══ */}
+        {/* ═══ CENTER — Graph / Globe + Timeline (primary focus) ═══ */}
         <div className="flex-1 bg-ds-bg overflow-y-auto flex flex-col p-4 gap-4">
-          {/* Graph Panel — dominant visual weight */}
+          {/* Main visualization — Graph or Globe */}
           <div className="flex-1 min-h-[420px]">
             {!hasResults && !isRunning && (
               <div className="h-full ds-card rounded-ds-xl flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 ds-grid-bg opacity-20" />
                 <div className="relative text-center">
                   <div className="w-12 h-12 rounded-full bg-ds-surface-raised border border-ds-border flex items-center justify-center mx-auto mb-3">
-                    <Network className="w-5 h-5 text-ds-text-dim" />
+                    {viewMode === 'graph' ? <Network className="w-5 h-5 text-ds-text-dim" /> : <Globe className="w-5 h-5 text-ds-text-dim" />}
                   </div>
                   <p className="text-caption text-ds-text-dim" dir="auto">
                     {lc(copy.selectScenario, lang)}
@@ -502,8 +521,11 @@ export default function DemoPage() {
                 </div>
               </div>
             )}
-            {hasResults && (
+            {hasResults && viewMode === 'graph' && (
               <GraphPanel initialNodes={graphNodes} initialEdges={graphEdges} />
+            )}
+            {hasResults && viewMode === 'globe' && (
+              <DemoGlobe result={engine.result} lang={lang} />
             )}
           </div>
 
