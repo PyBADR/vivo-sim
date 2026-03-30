@@ -23,14 +23,13 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('en');
+  const [lang, setLangState] = useState<Lang>('ar');
   const [mounted, setMounted] = useState(false);
 
-  // Initialize from localStorage on mount
+  // Initialize from localStorage on mount — Arabic is DEFAULT per directive
   useEffect(() => {
     const savedLang = localStorage.getItem('deevo-sim-lang') as Lang | null;
-    const browserLang = navigator.language.startsWith('ar') ? 'ar' : 'en';
-    const initialLang = savedLang || browserLang;
+    const initialLang = savedLang || 'ar';
 
     setLangState(initialLang);
     document.documentElement.lang = initialLang;

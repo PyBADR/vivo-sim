@@ -13,10 +13,41 @@ import {
 } from 'lucide-react'
 import type { DemoResult } from '@/lib/visualization/demoScenarios'
 
+/* ── Bilingual copy ── */
+const copy = {
+  propagationAnalysis: { en: 'Propagation Analysis',  ar: 'تحليل الانتشار' },
+  awaitingSignal:      { en: 'AWAITING SIGNAL',       ar: 'في انتظار الإشارة' },
+  runPrompt:           { en: 'Run a simulation to generate propagation analysis',
+                         ar: 'شغّل محاكاة لتوليد تحليل الانتشار' },
+  causalSummary:       { en: 'Causal Summary',         ar: 'ملخص السببية' },
+  confidence:          { en: 'Confidence',             ar: 'الثقة' },
+  systemEnergy:        { en: 'System Energy',          ar: 'طاقة النظام' },
+  sectorsHit:          { en: 'Sectors Hit',            ar: 'القطاعات المتأثرة' },
+  total:               { en: 'total',                  ar: 'إجمالي' },
+  causalChain:         { en: 'Causal Chain',           ar: 'سلسلة السببية' },
+  topDrivers:          { en: 'Top Drivers',            ar: 'المحركات الرئيسية' },
+  sectorImpact:        { en: 'Sector Impact',          ar: 'تأثير القطاعات' },
+  nodes:               { en: 'nodes',                  ar: 'عقد' },
+  nodesAffected:       { en: 'Nodes affected',         ar: 'العقد المتأثرة' },
+  maxDepth:            { en: 'Max depth',              ar: 'أقصى عمق' },
+}
+
+const confidenceLabels = {
+  high:         { en: 'HIGH',          ar: 'عالية' },
+  moderate:     { en: 'MODERATE',      ar: 'متوسطة' },
+  low:          { en: 'LOW',           ar: 'منخفضة' },
+  insufficient: { en: 'INSUFFICIENT',  ar: 'غير كافية' },
+}
+
+function lc(pair: { en: string; ar: string }, lang: string): string {
+  return lang === 'ar' ? pair.ar : pair.en
+}
+
 /* ── Types ── */
 
 interface PropagationInsightPanelProps {
   result: DemoResult | null
+  lang?: string
 }
 
 /* ── Utility: severity color from impact score ── */
@@ -26,35 +57,29 @@ function impactColor(score: number): string {
   return 'text-ds-success'
 }
 
-function impactBg(score: number): string {
-  if (score >= 0.7) return 'bg-ds-danger/10 border-ds-danger/20'
-  if (score >= 0.4) return 'bg-ds-warning/10 border-ds-warning/20'
-  return 'bg-ds-success/10 border-ds-success/20'
-}
-
-function confidenceLabel(c: number): string {
-  if (c >= 0.8) return 'HIGH'
-  if (c >= 0.5) return 'MODERATE'
-  if (c >= 0.3) return 'LOW'
-  return 'INSUFFICIENT'
+function confidenceLabel(c: number, lang: string): string {
+  if (c >= 0.8) return lc(confidenceLabels.high, lang)
+  if (c >= 0.5) return lc(confidenceLabels.moderate, lang)
+  if (c >= 0.3) return lc(confidenceLabels.low, lang)
+  return lc(confidenceLabels.insufficient, lang)
 }
 
 /* ── Component ── */
 
-export default function PropagationInsightPanel({ result }: PropagationInsightPanelProps) {
+export default function PropagationInsightPanel({ result, lang = 'en' }: PropagationInsightPanelProps) {
   if (!result) {
     return (
       <div className="bg-ds-surface rounded-ds-xl border border-ds-border p-5">
         <div className="flex items-center gap-2 mb-4">
           <Network size={14} className="text-ds-text-dim" />
-          <span className="text-caption font-semibold text-ds-text-dim">Propagation Analysis</span>
+          <span className="text-caption font-semibold text-ds-text-dim">{lc(copy.propagationAnalysis, lang)}</span>
         </div>
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <div className="w-10 h-10 rounded-full bg-ds-surface-raised border border-ds-border flex items-center justify-center mb-3">
             <Activity size={16} className="text-ds-text-dim" />
           </div>
-          <p className="text-caption text-ds-text-dim">Run a simulation to generate propagation analysis</p>
-          <p className="text-nano text-ds-text-dim mt-1 font-mono">AWAITING SIGNAL</p>
+          <p className="text-caption text-ds-text-dim">{lc(copy.runPrompt, lang)}</p>
+          <p className="text-nano text-ds-text-dim mt-1 font-mono">{lc(copy.awaitingSignal, lang)}</p>
         </div>
       </div>
     )
@@ -85,7 +110,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
         <div className="ds-panel-header-title">
           <Network size={14} className="text-ds-accent" />
           <span className="text-caption font-semibold text-ds-text tracking-tight">
-            Propagation Analysis
+            {lc(copy.propagationAnalysis, lang)}
           </span>
         </div>
         <span className="text-nano font-mono text-ds-text-dim uppercase tracking-wider">
@@ -105,7 +130,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
           <div className="flex items-center gap-2 mb-2">
             <Crosshair size={11} className="text-ds-accent" />
             <span className="text-nano font-semibold text-ds-accent uppercase tracking-[0.12em]">
-              Causal Summary
+              {lc(copy.causalSummary, lang)}
             </span>
           </div>
           <p className="text-[12px] leading-relaxed text-ds-text-secondary">{explanation}</p>
@@ -120,7 +145,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
         >
           <div className="bg-ds-card rounded-ds-lg p-3 border border-ds-border text-center">
             <span className="text-nano text-ds-text-dim block mb-1 uppercase tracking-wider font-medium">
-              Confidence
+              {lc(copy.confidence, lang)}
             </span>
             <span className="text-h4 font-bold text-ds-accent font-mono block">
               {Math.round(confidence * 100)}%
@@ -128,7 +153,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
             <span className={`text-nano font-mono mt-0.5 block ${
               confidence >= 0.7 ? 'text-ds-success' : confidence >= 0.4 ? 'text-ds-warning' : 'text-ds-danger'
             }`}>
-              {confidenceLabel(confidence)}
+              {confidenceLabel(confidence, lang)}
             </span>
             <div className="mt-1.5 h-1 bg-ds-border rounded-full overflow-hidden">
               <div
@@ -140,7 +165,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
 
           <div className="bg-ds-card rounded-ds-lg p-3 border border-ds-border text-center">
             <span className="text-nano text-ds-text-dim block mb-1 uppercase tracking-wider font-medium">
-              System Energy
+              {lc(copy.systemEnergy, lang)}
             </span>
             <span className="text-h4 font-bold text-ds-warning font-mono block">
               {totalLoss.toFixed(1)}
@@ -152,13 +177,13 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
 
           <div className="bg-ds-card rounded-ds-lg p-3 border border-ds-border text-center">
             <span className="text-nano text-ds-text-dim block mb-1 uppercase tracking-wider font-medium">
-              Sectors Hit
+              {lc(copy.sectorsHit, lang)}
             </span>
             <span className="text-h4 font-bold text-ds-danger font-mono block">
               {affectedSectors.length}
             </span>
             <span className="text-nano text-ds-text-dim font-mono mt-0.5 block">
-              / 14 total
+              / 14 {lc(copy.total, lang)}
             </span>
           </div>
         </motion.div>
@@ -172,7 +197,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={11} className="text-ds-accent" />
             <span className="text-nano font-semibold text-ds-text-secondary uppercase tracking-[0.12em]">
-              Causal Chain
+              {lc(copy.causalChain, lang)}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1">
@@ -182,7 +207,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
                   {label}
                 </span>
                 {i < propagationChain.length - 1 && (
-                  <ChevronRight size={10} className="text-ds-accent/50 mx-0.5" />
+                  <ChevronRight size={10} className={`text-ds-accent/50 mx-0.5 ${lang === 'ar' ? 'rotate-180' : ''}`} />
                 )}
               </span>
             ))}
@@ -198,7 +223,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
           <div className="flex items-center gap-2 mb-2">
             <Zap size={11} className="text-ds-accent" />
             <span className="text-nano font-semibold text-ds-text-secondary uppercase tracking-[0.12em]">
-              Top Drivers
+              {lc(copy.topDrivers, lang)}
             </span>
           </div>
           <div className="space-y-1.5">
@@ -238,7 +263,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
           <div className="flex items-center gap-2 mb-2">
             <Layers size={11} className="text-ds-accent" />
             <span className="text-nano font-semibold text-ds-text-secondary uppercase tracking-[0.12em]">
-              Sector Impact
+              {lc(copy.sectorImpact, lang)}
             </span>
           </div>
           <div className="space-y-1.5">
@@ -251,7 +276,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
                   {sector.sector.replace('_', ' ')}
                 </span>
                 <span className="text-nano font-mono text-ds-text-dim">
-                  {sector.nodeCount} nodes
+                  {sector.nodeCount} {lc(copy.nodes, lang)}
                 </span>
                 <span className={`text-[11px] font-bold font-mono ${impactColor(sector.maxImpact)}`}>
                   {Math.round(sector.maxImpact * 100)}%
@@ -279,7 +304,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
           <div className="flex items-center gap-2">
             <BarChart3 size={11} className="text-ds-text-dim" />
             <span className="text-nano text-ds-text-dim font-mono uppercase">
-              Nodes affected
+              {lc(copy.nodesAffected, lang)}
             </span>
           </div>
           <span className="text-[13px] font-bold font-mono text-ds-text">
@@ -287,7 +312,7 @@ export default function PropagationInsightPanel({ result }: PropagationInsightPa
           </span>
           <div className="flex items-center gap-2">
             <span className="text-nano text-ds-text-dim font-mono uppercase">
-              Max depth
+              {lc(copy.maxDepth, lang)}
             </span>
             <span className="text-[13px] font-bold font-mono text-ds-text">
               {prop.maxDepth}

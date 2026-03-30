@@ -31,7 +31,6 @@ import {
   mockGraphNodes,
   mockGraphEdges,
   mockSimulationSteps,
-  mockReport,
   mockChatMessages,
 } from '@/lib/mock-data'
 import { useScenarioEngine } from '@/lib/hooks/useScenarioEngine'
@@ -106,6 +105,29 @@ export default function DemoPage() {
 
   const isRunning = isAnimating
   const hasResults = engine.state === 'complete'
+
+  // ── Derived report from engine result ──
+  const derivedReport = useMemo(() => {
+    if (!engine.result) return null
+    const r = engine.result
+    const isArLang = lang === 'ar'
+    const spreadLevel =
+      r.totalLoss >= 5 ? 'high' : r.totalLoss >= 2 ? 'medium' : 'low'
+    return {
+      prediction: r.explanation,
+      main_driver: r.topDrivers[0]?.label ?? '—',
+      top_influencers: r.topDrivers.slice(0, 5).map((d) => d.label),
+      spread_level: spreadLevel,
+      confidence: r.confidence,
+      timeline_summary: r.propagationChain,
+      graph_observations: [
+        `${r.affectedSectors.length} ${isArLang ? 'قطاعات متأثرة من أصل' : 'sectors affected out of'} 14`,
+        `${r.propagationResult.affectedNodes.length} ${isArLang ? 'عقدة تأثرت' : 'nodes impacted'}`,
+        `${isArLang ? 'أقصى عمق انتشار:' : 'Max propagation depth:'} ${r.propagationResult.maxDepth}`,
+        `${isArLang ? 'طاقة النظام الكلية:' : 'Total system energy:'} ${r.totalLoss.toFixed(2)}`,
+      ],
+    }
+  }, [engine.result, lang])
 
   // ── Mobile detection ──
   useEffect(() => {
@@ -500,16 +522,16 @@ export default function DemoPage() {
             {/* Panels */}
             <div className="flex-shrink-0">
               {!hasResults && insightTab === 'propagation' && (
-                <PropagationInsightPanel result={null} />
+                <PropagationInsightPanel result={null} lang={lang} />
               )}
               {!hasResults && insightTab === 'brief' && (
                 <ReportPanel report={null} />
               )}
               {hasResults && insightTab === 'propagation' && (
-                <PropagationInsightPanel result={engine.result} />
+                <PropagationInsightPanel result={engine.result} lang={lang} />
               )}
               {hasResults && insightTab === 'brief' && (
-                <ReportPanel report={mockReport} />
+                <ReportPanel report={derivedReport} />
               )}
             </div>
 
