@@ -221,6 +221,28 @@ const FOOD_SUPPLY: GraphNode[] = [
   n({ id: "FOOD_SECURITY_KSA", label: "KSA Food Security (SFDA)", type: "city", coord: { lat: 24.73, lng: 46.66 }, country: "KSA", severity: 0, status: "low", sector: "food_supply", influence: 0.70, isSuper: false }),
 ];
 
+/* ── REGULATORY AUTHORITIES (Ministries & Sector Oversight) ── */
+const AUTHORITIES: GraphNode[] = [
+  n({ id: "MOE_KSA",   label: "KSA Ministry of Energy",         type: "city", coord: { lat: 24.69, lng: 46.72 }, country: "KSA", severity: 0, status: "low", sector: "regulatory", influence: 0.90, isSuper: false }),
+  n({ id: "GACA_KSA",  label: "GACA (Saudi Aviation Auth)",     type: "city", coord: { lat: 24.96, lng: 46.71 }, country: "KSA", severity: 0, status: "low", sector: "regulatory", influence: 0.80, isSuper: false }),
+  n({ id: "GCAA_UAE",  label: "GCAA (UAE Aviation Auth)",       type: "city", coord: { lat: 24.45, lng: 54.65 }, country: "UAE", severity: 0, status: "low", sector: "regulatory", influence: 0.80, isSuper: false }),
+  n({ id: "MAWANI_KSA",label: "Mawani (Saudi Ports Auth)",     type: "city", coord: { lat: 26.43, lng: 50.11 }, country: "KSA", severity: 0, status: "low", sector: "regulatory", influence: 0.75, isSuper: false }),
+  n({ id: "STA_KSA",   label: "Saudi Tourism Authority",        type: "city", coord: { lat: 24.71, lng: 46.68 }, country: "KSA", severity: 0, status: "low", sector: "regulatory", influence: 0.75, isSuper: false }),
+  n({ id: "DTCM_UAE",  label: "DTCM (Dubai Tourism)",           type: "city", coord: { lat: 25.20, lng: 55.28 }, country: "UAE", severity: 0, status: "low", sector: "regulatory", influence: 0.70, isSuper: false }),
+];
+
+/* ── REINSURANCE ── */
+const REINSURANCE: GraphNode[] = [
+  n({ id: "REINS_POOL", label: "GCC Reinsurance Pool", type: "city", coord: { lat: 25.30, lng: 54.50 }, country: "International", severity: 0, status: "low", sector: "insurance", influence: 0.75, isSuper: false }),
+];
+
+/* ── TELECOM (filling sector gap) ── */
+const TELECOM: GraphNode[] = [
+  n({ id: "STC_KSA",      label: "STC (Saudi Telecom)",    type: "city", coord: { lat: 24.72, lng: 46.72 }, country: "KSA", severity: 0, status: "low", sector: "telecom", influence: 0.80, isSuper: false }),
+  n({ id: "ETISALAT_UAE", label: "e& (Etisalat)",          type: "city", coord: { lat: 24.45, lng: 54.64 }, country: "UAE", severity: 0, status: "low", sector: "telecom", influence: 0.80, isSuper: false }),
+  n({ id: "OOREDOO_QAT",  label: "Ooredoo Qatar",          type: "city", coord: { lat: 25.29, lng: 51.53 }, country: "Qatar", severity: 0, status: "low", sector: "telecom", influence: 0.65, isSuper: false }),
+];
+
 /* ── ALL NODES ── */
 export const ALL_GCC_NODES: GraphNode[] = [
   ...SOVEREIGNS,
@@ -236,6 +258,9 @@ export const ALL_GCC_NODES: GraphNode[] = [
   ...TOURISM,
   ...UTILITIES,
   ...FOOD_SUPPLY,
+  ...AUTHORITIES,
+  ...REINSURANCE,
+  ...TELECOM,
 ];
 
 /* ── Supernodes (top 10 by influence) ── */

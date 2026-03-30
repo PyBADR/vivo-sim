@@ -287,6 +287,54 @@ export const ALL_GCC_EDGES: GraphEdge[] = [
   e("HORMUZ", "ADNOC", "stresses", "energy", 0.85, 0.65, 0.75, 2),
   e("HORMUZ", "KPC", "stresses", "energy", 0.75, 0.55, 0.65, 4),
   e("HORMUZ", "QATARGAS", "stresses", "energy", 0.80, 0.60, 0.70, 3),
+
+  /* ── OIL EXPORT → HORMUZ (forward export flow) ── */
+  e("ARAMCO", "HORMUZ", "exports_to", "energy", 0.90, 0.85, 0.88, 2),
+  e("ADNOC", "HORMUZ", "exports_to", "energy", 0.85, 0.75, 0.80, 2),
+  e("KPC", "HORMUZ", "exports_to", "energy", 0.80, 0.70, 0.75, 3),
+
+  /* ── UTILITIES → GOVERNMENT STABILITY (power/water disruption → social pressure) ── */
+  e("SEC", "GOV_KSA", "stresses", "utilities", 0.70, 0.55, 0.60, 6),
+  e("DEWA", "GOV_UAE", "stresses", "utilities", 0.70, 0.55, 0.60, 6),
+  e("KAHRAMAA", "GOV_QAT", "stresses", "utilities", 0.65, 0.50, 0.55, 6),
+  e("EWA_BHR", "GOV_BHR", "stresses", "utilities", 0.60, 0.45, 0.50, 8),
+  e("NAMA_OMN", "GOV_OMN", "stresses", "utilities", 0.55, 0.40, 0.45, 8),
+  e("MEW_KWT", "GOV_KWT", "stresses", "utilities", 0.60, 0.45, 0.50, 8),
+  e("DESAL_GCC", "FOOD_IMPORT_GCC", "supplies", "utilities", 0.65, 0.50, 0.55, 6),
+
+  /* ── TOURISM → ECONOMY (missing spillover for BHR, KWT, OMN) ── */
+  e("TOURISM_BHR", "BSE_BHR", "influences", "tourism", 0.50, 0.35, 0.40, 8),
+  e("TOURISM_KWT", "BOURSA_KWT", "influences", "tourism", 0.45, 0.30, 0.35, 8),
+  e("TOURISM_OMN", "MSM_OMN", "influences", "tourism", 0.45, 0.30, 0.35, 8),
+
+  /* ── INSURANCE → REINSURANCE POOL (risk cession chain) ── */
+  e("TAWUNIYA", "REINS_POOL", "insures", "insurance", 0.65, 0.50, 0.55, 2),
+  e("OIC", "REINS_POOL", "insures", "insurance", 0.60, 0.45, 0.50, 2),
+  e("QIC", "REINS_POOL", "insures", "insurance", 0.55, 0.40, 0.45, 2),
+  e("GIG_GULF", "REINS_POOL", "insures", "insurance", 0.50, 0.35, 0.40, 3),
+  e("AMAN_UAE", "REINS_POOL", "insures", "insurance", 0.50, 0.35, 0.40, 2),
+  e("BUPA_KSA", "REINS_POOL", "insures", "insurance", 0.45, 0.30, 0.35, 3),
+
+  /* ── PORT → FOOD (missing: Bahrain + Oman) ── */
+  e("MINA_SALMAN", "FOOD_IMPORT_GCC", "supplies", "food_supply", 0.50, 0.35, 0.40, 4),
+  e("SOHAR", "FOOD_IMPORT_GCC", "supplies", "food_supply", 0.55, 0.40, 0.45, 4),
+
+  /* ── REGULATORY AUTHORITIES → SECTOR OVERSIGHT ── */
+  e("MOE_KSA", "ARAMCO", "influences", "regulatory", 0.80, 0.60, 0.70, 2),
+  e("MOE_KSA", "SEC", "influences", "regulatory", 0.70, 0.50, 0.60, 4),
+  e("GACA_KSA", "RUH", "influences", "regulatory", 0.75, 0.55, 0.65, 2),
+  e("GACA_KSA", "SV", "influences", "regulatory", 0.70, 0.50, 0.60, 2),
+  e("GCAA_UAE", "DXB", "influences", "regulatory", 0.75, 0.55, 0.65, 2),
+  e("GCAA_UAE", "EK", "influences", "regulatory", 0.70, 0.50, 0.60, 2),
+  e("MAWANI_KSA", "DAMMAM_PORT", "influences", "regulatory", 0.70, 0.50, 0.60, 2),
+  e("MAWANI_KSA", "JEDDAH_PORT", "influences", "regulatory", 0.70, 0.50, 0.60, 3),
+  e("STA_KSA", "TOURISM_KSA", "influences", "regulatory", 0.75, 0.55, 0.65, 2),
+  e("DTCM_UAE", "TOURISM_UAE", "influences", "regulatory", 0.70, 0.50, 0.60, 2),
+
+  /* ── TELECOM → ECONOMY (digital infrastructure dependency) ── */
+  e("STC_KSA", "TADAWUL", "supplies", "telecom", 0.55, 0.40, 0.45, 4),
+  e("ETISALAT_UAE", "DFM", "supplies", "telecom", 0.55, 0.40, 0.45, 4),
+  e("OOREDOO_QAT", "QSE", "supplies", "telecom", 0.50, 0.35, 0.40, 4),
 ];
 
 /* ── Edge Lookup ── */
