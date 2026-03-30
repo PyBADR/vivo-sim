@@ -522,7 +522,7 @@ export default function DemoPage() {
               </div>
             )}
             {hasResults && viewMode === 'graph' && (
-              <GraphPanel initialNodes={graphNodes} initialEdges={graphEdges} />
+              <GraphPanel initialNodes={graphNodes} initialEdges={graphEdges} lang={lang} />
             )}
             {hasResults && viewMode === 'globe' && (
               <DemoGlobe result={engine.result} lang={lang} />
@@ -621,6 +621,7 @@ export default function DemoPage() {
             {/* Analyst / Chat */}
             <div className="flex-1 min-h-0 flex flex-col">
               <ChatPanel
+                lang={lang}
                 initialMessages={
                   hasResults
                     ? mockChatMessages

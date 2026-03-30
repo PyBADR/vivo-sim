@@ -3,35 +3,63 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Terminal, Send, Bot, ChevronRight } from 'lucide-react'
 
+/* ── Bilingual copy ── */
+const panelCopy = {
+  analyst:         { en: 'Analyst',                    ar: 'المحلل' },
+  query:           { en: 'Query',                      ar: 'استعلام' },
+  suggestedQueries:{ en: 'Suggested queries',          ar: 'استعلامات مقترحة' },
+  analysis:        { en: 'Analysis',                   ar: 'تحليل' },
+  processing:      { en: 'Processing',                 ar: 'جاري المعالجة' },
+  placeholder:     { en: 'Query the simulation...',    ar: 'استعلم عن المحاكاة...' },
+}
+
+const presetQueriesBI = [
+  { en: 'Why did sentiment drop at t2?',               ar: 'لماذا انخفضت المشاعر في t2؟' },
+  { en: 'Who influenced the spread most?',             ar: 'من أثّر على الانتشار أكثر؟' },
+  { en: 'What if the government responds earlier?',    ar: 'ماذا لو استجابت الحكومة مبكرًا؟' },
+]
+
+const mockResponses: Record<string, { en: string; ar: string }> = {
+  default: {
+    en: 'Based on the simulation data, the primary driver was social media amplification by high-influence accounts. The negative sentiment spread rapidly through Twitter, peaking at t3 before government intervention at t4 began stabilizing public opinion.',
+    ar: 'بناءً على بيانات المحاكاة، كان المحرك الرئيسي هو تضخيم وسائل التواصل الاجتماعي من قبل حسابات عالية التأثير. انتشرت المشاعر السلبية بسرعة عبر تويتر، وبلغت ذروتها في t3 قبل أن يبدأ التدخل الحكومي في t4 باستقرار الرأي العام.',
+  },
+  why: {
+    en: 'The sentiment drop at t2 was triggered by influencer amplification. When high-influence accounts engaged with the topic, their reach multiplied the negative signal by approximately 3.2x, causing the hashtag to trend nationally.',
+    ar: 'كان انخفاض المشاعر في t2 ناتجًا عن تضخيم المؤثرين. عندما تفاعلت الحسابات عالية التأثير مع الموضوع، تضاعف مدى الإشارة السلبية بنحو 3.2 مرة، مما تسبب في تصدر الهاشتاق على المستوى الوطني.',
+  },
+  who: {
+    en: 'The top influencer in this simulation was @gcc_analyst with an influence score of 0.85, followed by @saudi_voice (0.75). Together, they accounted for roughly 40% of the amplification during the peak phase.',
+    ar: 'كان المؤثر الأبرز في هذه المحاكاة هو @gcc_analyst بدرجة تأثير 0.85، يليه @saudi_voice (0.75). معًا، شكلا نحو 40% من التضخيم خلال مرحلة الذروة.',
+  },
+  'what if': {
+    en: 'If the government had responded at t2 instead of t4, our model predicts the peak visibility would have been 35% lower and sentiment recovery would have occurred approximately 18 hours earlier, reducing the overall spread level from "high" to "medium".',
+    ar: 'لو استجابت الحكومة في t2 بدلاً من t4، يتنبأ نموذجنا بأن ذروة الظهور كانت ستكون أقل بنسبة 35% وأن تعافي المشاعر كان سيحدث قبل نحو 18 ساعة، مما يخفض مستوى الانتشار الكلي من "عالي" إلى "متوسط".',
+  },
+}
+
+function lc(pair: { en: string; ar: string }, lang: string): string {
+  return lang === 'ar' ? pair.ar : pair.en
+}
+
 interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
 }
 
-const presetQueries = [
-  'Why did sentiment drop at t2?',
-  'Who influenced the spread most?',
-  'What if the government responds earlier?',
-]
-
-const mockResponses: Record<string, string> = {
-  'default': 'Based on the simulation data, the primary driver was social media amplification by high-influence accounts. The negative sentiment spread rapidly through Twitter, peaking at t3 before government intervention at t4 began stabilizing public opinion.',
-  'why': 'The sentiment drop at t2 was triggered by influencer amplification. When high-influence accounts engaged with the topic, their reach multiplied the negative signal by approximately 3.2x, causing the hashtag to trend nationally.',
-  'who': 'The top influencer in this simulation was @gcc_analyst with an influence score of 0.85, followed by @saudi_voice (0.75). Together, they accounted for roughly 40% of the amplification during the peak phase.',
-  'what if': 'If the government had responded at t2 instead of t4, our model predicts the peak visibility would have been 35% lower and sentiment recovery would have occurred approximately 18 hours earlier, reducing the overall spread level from "high" to "medium".',
-}
-
 interface ChatPanelProps {
   initialMessages?: Message[]
   scenarioId?: string
+  lang?: string
 }
 
-export default function ChatPanel({ initialMessages = [] }: ChatPanelProps) {
+export default function ChatPanel({ initialMessages = [], lang = 'en' }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const isAr = lang === 'ar'
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -51,14 +79,15 @@ export default function ChatPanel({ initialMessages = [] }: ChatPanelProps) {
     setTimeout(() => {
       const lowerQ = question.toLowerCase()
       let responseKey = 'default'
-      if (lowerQ.includes('why') || lowerQ.includes('drop') || lowerQ.includes('sentiment')) responseKey = 'why'
-      else if (lowerQ.includes('who') || lowerQ.includes('influenc')) responseKey = 'who'
-      else if (lowerQ.includes('what if') || lowerQ.includes('earlier') || lowerQ.includes('government')) responseKey = 'what if'
+      if (lowerQ.includes('why') || lowerQ.includes('drop') || lowerQ.includes('sentiment') || lowerQ.includes('لماذا') || lowerQ.includes('انخفض')) responseKey = 'why'
+      else if (lowerQ.includes('who') || lowerQ.includes('influenc') || lowerQ.includes('من') || lowerQ.includes('أثّر')) responseKey = 'who'
+      else if (lowerQ.includes('what if') || lowerQ.includes('earlier') || lowerQ.includes('government') || lowerQ.includes('ماذا لو') || lowerQ.includes('الحكومة')) responseKey = 'what if'
 
+      const resp = mockResponses[responseKey]
       const assistantMsg: Message = {
         id: `msg_${Date.now() + 1}`,
         role: 'assistant',
-        content: mockResponses[responseKey],
+        content: lc(resp, lang),
       }
       setMessages(prev => [...prev, assistantMsg])
       setIsTyping(false)
@@ -71,25 +100,25 @@ export default function ChatPanel({ initialMessages = [] }: ChatPanelProps) {
       <div className="ds-panel-header flex-shrink-0">
         <div className="ds-panel-header-title">
           <Terminal size={14} className="text-ds-accent" />
-          <span className="text-caption font-semibold text-ds-text tracking-tight">Analyst</span>
+          <span className="text-caption font-semibold text-ds-text tracking-tight">{lc(panelCopy.analyst, lang)}</span>
         </div>
-        <span className="text-nano font-mono text-ds-text-dim uppercase tracking-wider">Query</span>
+        <span className="text-nano font-mono text-ds-text-dim uppercase tracking-wider">{lc(panelCopy.query, lang)}</span>
       </div>
 
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {messages.length === 0 && (
           <div className="py-4">
-            <p className="text-nano text-ds-text-dim uppercase tracking-wider font-semibold mb-3">Suggested queries</p>
+            <p className="text-nano text-ds-text-dim uppercase tracking-wider font-semibold mb-3">{lc(panelCopy.suggestedQueries, lang)}</p>
             <div className="space-y-1.5">
-              {presetQueries.map((q, i) => (
+              {presetQueriesBI.map((q, i) => (
                 <button
                   key={i}
-                  onClick={() => handleSend(q)}
-                  className="w-full text-left px-3.5 py-2.5 text-micro text-ds-text-secondary bg-ds-card border border-ds-border rounded-ds-lg hover:bg-ds-card-hover hover:border-ds-border-hover transition-all duration-200 flex items-center gap-2 group"
+                  onClick={() => handleSend(lc(q, lang))}
+                  className={`w-full ${isAr ? 'text-right' : 'text-left'} px-3.5 py-2.5 text-micro text-ds-text-secondary bg-ds-card border border-ds-border rounded-ds-lg hover:bg-ds-card-hover hover:border-ds-border-hover transition-all duration-200 flex items-center gap-2 group`}
                 >
-                  <ChevronRight size={12} className="text-ds-text-dim group-hover:text-ds-accent transition-colors flex-shrink-0" />
-                  <span>{q}</span>
+                  <ChevronRight size={12} className={`text-ds-text-dim group-hover:text-ds-accent transition-colors flex-shrink-0 ${isAr ? 'rotate-180' : ''}`} />
+                  <span>{lc(q, lang)}</span>
                 </button>
               ))}
             </div>
@@ -102,7 +131,7 @@ export default function ChatPanel({ initialMessages = [] }: ChatPanelProps) {
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex gap-2.5 ${msg.role === 'user' ? (isAr ? 'justify-start' : 'justify-end') : (isAr ? 'justify-end' : 'justify-start')}`}
           >
             {msg.role === 'assistant' && (
               <div className="w-6 h-6 rounded-md bg-ds-accent/12 border border-ds-accent/20 flex items-center justify-center shrink-0 mt-0.5">
@@ -115,7 +144,7 @@ export default function ChatPanel({ initialMessages = [] }: ChatPanelProps) {
                 : 'bg-ds-card text-ds-text-secondary border border-ds-border rounded-ds-lg rounded-bl-md'
             }`}>
               {msg.role === 'assistant' && (
-                <span className="text-[9px] font-mono text-ds-accent/60 uppercase tracking-wider block mb-1">Analysis</span>
+                <span className="text-[9px] font-mono text-ds-accent/60 uppercase tracking-wider block mb-1">{lc(panelCopy.analysis, lang)}</span>
               )}
               {msg.content}
             </div>
@@ -129,7 +158,7 @@ export default function ChatPanel({ initialMessages = [] }: ChatPanelProps) {
               <Bot size={11} className="text-ds-accent" />
             </div>
             <div className="flex items-center gap-1.5 px-3.5 py-2.5 bg-ds-card border border-ds-border rounded-ds-lg rounded-bl-md">
-              <span className="text-[9px] font-mono text-ds-accent/60 uppercase tracking-wider mr-1">Processing</span>
+              <span className="text-[9px] font-mono text-ds-accent/60 uppercase tracking-wider mr-1">{lc(panelCopy.processing, lang)}</span>
               <span className="w-1 h-1 rounded-full bg-ds-accent/50 animate-bounce" style={{ animationDelay: '0ms' }} />
               <span className="w-1 h-1 rounded-full bg-ds-accent/50 animate-bounce" style={{ animationDelay: '150ms' }} />
               <span className="w-1 h-1 rounded-full bg-ds-accent/50 animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -148,7 +177,8 @@ export default function ChatPanel({ initialMessages = [] }: ChatPanelProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Query the simulation..."
+              placeholder={lc(panelCopy.placeholder, lang)}
+              dir="auto"
               className="w-full bg-ds-card border border-ds-border rounded-ds-lg pl-7 pr-3.5 py-2.5 text-caption text-ds-text placeholder:text-ds-text-dim outline-none transition-all duration-200 focus:border-ds-accent/30 focus:shadow-[0_0_0_3px_rgba(91,123,248,0.06)] font-mono"
             />
           </div>

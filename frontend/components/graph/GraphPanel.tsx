@@ -16,6 +16,20 @@ import '@xyflow/react/dist/style.css'
 import { Eye, EyeOff } from 'lucide-react'
 import { getNodeColor } from '@/lib/utils'
 
+/* ── Bilingual copy ── */
+const copy = {
+  entityGraph: { en: 'Entity Graph',  ar: 'شبكة الكيانات' },
+  live:        { en: 'LIVE',           ar: 'مباشر' },
+  focusMode:   { en: 'Focus Mode',    ar: 'وضع التركيز' },
+  exitFocus:   { en: 'Exit Focus',    ar: 'إلغاء التركيز' },
+  nodes:       { en: 'nodes',          ar: 'عقدة' },
+  edges:       { en: 'edges',          ar: 'رابط' },
+}
+
+function lc(pair: { en: string; ar: string }, lang: string): string {
+  return lang === 'ar' ? pair.ar : pair.en
+}
+
 /* ──────────────────────────────────────────────
    Custom Node — cinematic, glowing, alive
    ────────────────────────────────────────────── */
@@ -89,9 +103,10 @@ const nodeTypes = { custom: CustomNode }
 interface GraphPanelProps {
   initialNodes: Node[]
   initialEdges: Edge[]
+  lang?: string
 }
 
-export default function GraphPanel({ initialNodes, initialEdges }: GraphPanelProps) {
+export default function GraphPanel({ initialNodes, initialEdges, lang = 'en' }: GraphPanelProps) {
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [edges, , onEdgesChange] = useEdgesState(initialEdges)
   const [focusMode, setFocusMode] = useState(false)
@@ -116,15 +131,15 @@ export default function GraphPanel({ initialNodes, initialEdges }: GraphPanelPro
       <div className="ds-panel-header">
         <div className="ds-panel-header-title">
           <div className="w-2 h-2 rounded-full bg-ds-success animate-pulse" />
-          <span className="text-caption font-semibold text-ds-text tracking-tight">Entity Graph</span>
-          <span className="text-nano text-ds-text-dim font-mono ml-1">LIVE</span>
+          <span className="text-caption font-semibold text-ds-text tracking-tight">{lc(copy.entityGraph, lang)}</span>
+          <span className="text-nano text-ds-text-dim font-mono ml-1">{lc(copy.live, lang)}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="ds-panel-header-meta">{nodes.length} nodes · {edges.length} edges</span>
+          <span className="ds-panel-header-meta">{nodes.length} {lc(copy.nodes, lang)} · {edges.length} {lc(copy.edges, lang)}</span>
           <button
             onClick={() => setFocusMode(!focusMode)}
             className="p-1.5 rounded-md hover:bg-ds-card transition-colors text-ds-text-muted hover:text-ds-text"
-            title={focusMode ? 'Exit Focus Mode' : 'Focus Mode'}
+            title={focusMode ? lc(copy.exitFocus, lang) : lc(copy.focusMode, lang)}
           >
             {focusMode ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
@@ -163,7 +178,7 @@ export default function GraphPanel({ initialNodes, initialEdges }: GraphPanelPro
       {focusMode && (
         <div className="absolute top-14 left-1/2 -translate-x-1/2 bg-ds-accent/10 border border-ds-accent/20 backdrop-blur-sm rounded-full px-3 py-1 text-nano font-mono text-ds-accent flex items-center gap-1.5">
           <Eye size={10} />
-          FOCUS MODE
+          {lc(copy.focusMode, lang)}
         </div>
       )}
     </div>
