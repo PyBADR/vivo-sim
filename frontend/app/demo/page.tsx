@@ -27,9 +27,7 @@ import TimelinePanel from '@/components/simulation/TimelinePanel'
 import ReportPanel from '@/components/report/ReportPanel'
 import PropagationInsightPanel from '@/components/report/PropagationInsightPanel'
 import ChatPanel from '@/components/chat/ChatPanel'
-import {
-  mockChatMessages,
-} from '@/lib/mock-data'
+// All mock data eliminated — engine provides real data
 import { useScenarioEngine } from '@/lib/hooks/useScenarioEngine'
 import { useI18n } from '@/lib/i18n/context'
 
@@ -575,6 +573,7 @@ export default function DemoPage() {
                 steps={derivedTimelineSteps}
                 activeStep={currentStep}
                 onStepChange={setCurrentStep}
+                lang={lang}
               />
             )}
           </div>
@@ -650,17 +649,15 @@ export default function DemoPage() {
             <div className="flex-1 min-h-0 flex flex-col">
               <ChatPanel
                 lang={lang}
-                initialMessages={
-                  hasResults
-                    ? mockChatMessages
-                    : [
-                        {
-                          id: '1',
-                          role: 'assistant' as const,
-                          content: lc(copy.analyst, lang),
-                        },
-                      ]
-                }
+                initialMessages={[
+                  {
+                    id: '1',
+                    role: 'assistant' as const,
+                    content: hasResults
+                      ? lc({ en: 'Simulation complete. The scenario shows propagation across GCC infrastructure. Ask me anything about the results.', ar: 'اكتملت المحاكاة. يظهر السيناريو انتشارًا عبر البنية التحتية الخليجية. اسألني أي شيء عن النتائج.' }, lang)
+                      : lc(copy.analyst, lang),
+                  },
+                ]}
               />
             </div>
           </div>

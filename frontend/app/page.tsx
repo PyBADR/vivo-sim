@@ -27,8 +27,34 @@ import {
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import SectionHeading from '@/components/ui/SectionHeading';
+import { useI18n } from '@/lib/i18n/context';
+
+/* ── Bilingual copy for landing page ── */
+const hp = {
+  badge:       { en: 'GCC Crisis Rehearsal Platform',    ar: 'منصة التدريب على الأزمات الخليجية' },
+  heroLine1:   { en: 'Rehearse What',                    ar: 'تدرّب على' },
+  heroLine2:   { en: 'Happens Next',                     ar: 'ما سيحدث' },
+  heroSub:     { en: 'Enterprise crisis simulation for GCC decision-makers. Transform scenarios into predictive intelligence through 8-stage transformation pipeline. Make decisions with confidence.',
+                 ar: 'محاكاة أزمات مؤسسية لصنّاع القرار الخليجيين. حوّل السيناريوهات إلى استخبارات تنبؤية عبر خط معالجة من 8 مراحل. اتخذ قرارات بثقة.' },
+  launchSim:   { en: 'Launch Simulator',                 ar: 'ابدأ المحاكاة' },
+  viewPipeline:{ en: 'View Pipeline',                    ar: 'عرض خط المعالجة' },
+  live:        { en: 'Live',                              ar: 'مباشر' },
+  rehearsed:   { en: 'Rehearsed Reality',                 ar: 'واقع مُتدرَّب عليه' },
+  gccReady:    { en: 'GCC Ready',                         ar: 'جاهز للخليج' },
+  scenariosTag:{ en: 'Scenarios',                         ar: 'سيناريوهات' },
+  watchTitle:  { en: 'Watch VIVO SIM in Action',          ar: 'شاهد VIVO SIM أثناء العمل' },
+  startCrisis: { en: 'Start Your Crisis Rehearsal',       ar: 'ابدأ تدريبك على الأزمات' },
+  requestDemo: { en: 'Request Demo',                      ar: 'اطلب عرضًا تجريبيًا' },
+  enterCmd:    { en: 'Enter Command Center',              ar: 'دخول غرفة القيادة' },
+}
+
+function lc(pair: { en: string; ar: string }, lang: string): string {
+  return lang === 'ar' ? pair.ar : pair.en;
+}
 
 export default function HomePage() {
+  const { lang } = useI18n();
+  const isAr = lang === 'ar';
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -47,7 +73,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-ds-bg text-ds-text">
+    <div className="min-h-screen bg-ds-bg text-ds-text" dir={isAr ? 'rtl' : 'ltr'}>
       <Navbar />
 
       {/* ═══════════════════════════════════════════
@@ -77,7 +103,7 @@ export default function HomePage() {
           <motion.div variants={itemVariants}>
             <div className="ds-badge-accent inline-flex items-center gap-2 mb-8">
               <Globe className="w-3.5 h-3.5" />
-              <span>GCC Crisis Rehearsal Platform</span>
+              <span>{lc(hp.badge, lang)}</span>
             </div>
           </motion.div>
 
@@ -86,9 +112,9 @@ export default function HomePage() {
             variants={itemVariants}
             className="text-display-sm lg:text-display font-bold leading-[1.02] tracking-tight mb-8"
           >
-            Rehearse What
+            {lc(hp.heroLine1, lang)}
             <br />
-            <span className="text-ds-accent">Happens Next</span>
+            <span className="text-ds-accent">{lc(hp.heroLine2, lang)}</span>
           </motion.h1>
 
           {/* Subtext */}
@@ -96,9 +122,7 @@ export default function HomePage() {
             variants={itemVariants}
             className="text-body-lg text-ds-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed"
           >
-            Enterprise crisis simulation for GCC decision-makers. Transform scenarios into
-            predictive intelligence through 8-stage transformation pipeline. Make decisions
-            with confidence.
+            {lc(hp.heroSub, lang)}
           </motion.p>
 
           {/* CTA buttons */}
@@ -107,11 +131,11 @@ export default function HomePage() {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Link href="/demo" className="ds-btn-primary text-[15px] px-8 py-4">
-              Launch Simulator
-              <ArrowRight className="w-4 h-4" />
+              {lc(hp.launchSim, lang)}
+              <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
             </Link>
             <Link href="/architecture" className="ds-btn-secondary text-[15px] px-8 py-4">
-              View Pipeline
+              {lc(hp.viewPipeline, lang)}
             </Link>
           </motion.div>
 
@@ -122,12 +146,12 @@ export default function HomePage() {
           >
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-ds-success animate-pulse" />
-              <span className="text-nano font-mono uppercase tracking-wider">Live</span>
+              <span className="text-nano font-mono uppercase tracking-wider">{lc(hp.live, lang)}</span>
             </div>
             <span className="text-nano">·</span>
-            <span className="text-nano font-mono uppercase tracking-wider">Rehearsed Reality</span>
+            <span className="text-nano font-mono uppercase tracking-wider">{lc(hp.rehearsed, lang)}</span>
             <span className="text-nano">·</span>
-            <span className="text-nano font-mono uppercase tracking-wider">GCC Ready</span>
+            <span className="text-nano font-mono uppercase tracking-wider">{lc(hp.gccReady, lang)}</span>
           </motion.div>
         </motion.div>
       </section>
@@ -137,7 +161,7 @@ export default function HomePage() {
           ═══════════════════════════════════════════ */}
       <section className="ds-section">
         <div className="ds-container">
-          <SectionHeading tag="Scenarios" title="Watch VIVO SIM in Action" />
+          <SectionHeading tag={lc(hp.scenariosTag, lang)} title={lc(hp.watchTitle, lang)} />
 
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -417,9 +441,9 @@ export default function HomePage() {
                     Real-time scenario modeling with live parameter adjustment. Run what-if scenarios,
                     compare outcomes, and brief leadership in minutes.
                   </p>
-                  <Link href="/simulator" className="ds-btn-primary text-[15px] px-8 py-4 mt-8">
-                    Enter Command Center
-                    <ArrowRight className="w-4 h-4" />
+                  <Link href="/demo" className="ds-btn-primary text-[15px] px-8 py-4 mt-8">
+                    {lc(hp.enterCmd, lang)}
+                    <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
                   </Link>
                 </div>
               </div>
@@ -617,17 +641,17 @@ export default function HomePage() {
             transition={{ duration: 0.7 }}
           >
             <div className="ds-card p-14 lg:p-20 rounded-ds-xl text-center bg-gradient-to-br from-ds-surface to-ds-bg">
-              <h2 className="text-h2 lg:text-h1 text-ds-text">Start Your Crisis Rehearsal</h2>
+              <h2 className="text-h2 lg:text-h1 text-ds-text">{lc(hp.startCrisis, lang)}</h2>
               <p className="text-body-lg text-ds-text-secondary mt-4 max-w-xl mx-auto">
                 Experience VIVO SIM&apos;s 8-stage pipeline. Model scenarios, see cascade effects, and brief leadership.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
-                <Link href="/simulator" className="ds-btn-primary text-[15px] px-8 py-4">
-                  Launch Simulator
-                  <ArrowRight className="w-4 h-4" />
+                <Link href="/demo" className="ds-btn-primary text-[15px] px-8 py-4">
+                  {lc(hp.launchSim, lang)}
+                  <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
                 </Link>
                 <Link href="/contact" className="ds-btn-secondary text-[15px] px-8 py-4">
-                  Request Demo
+                  {lc(hp.requestDemo, lang)}
                 </Link>
               </div>
             </div>

@@ -3,6 +3,15 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Activity, TrendingDown, TrendingUp, Minus, Play, Pause, SkipForward } from 'lucide-react'
 
+/* ── Bilingual copy ── */
+const copy = {
+  simTimeline: { en: 'Simulation Timeline', ar: 'الجدول الزمني للمحاكاة' },
+}
+
+function lc(pair: { en: string; ar: string }, lang: string): string {
+  return lang === 'ar' ? pair.ar : pair.en
+}
+
 interface SimStep {
   step: number
   label: string
@@ -16,9 +25,10 @@ interface TimelinePanelProps {
   steps: SimStep[]
   activeStep?: number
   onStepChange?: (step: number) => void
+  lang?: string
 }
 
-export default function TimelinePanel({ steps, activeStep = 0, onStepChange }: TimelinePanelProps) {
+export default function TimelinePanel({ steps, activeStep = 0, onStepChange, lang = 'en' }: TimelinePanelProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentStep, setCurrentStep] = useState(activeStep)
 
@@ -39,7 +49,7 @@ export default function TimelinePanel({ steps, activeStep = 0, onStepChange }: T
       <div className="ds-panel-header">
         <div className="ds-panel-header-title">
           <Activity size={14} className="text-ds-accent" />
-          <span className="text-caption font-semibold text-ds-text tracking-tight">Simulation Timeline</span>
+          <span className="text-caption font-semibold text-ds-text tracking-tight">{lc(copy.simTimeline, lang)}</span>
         </div>
         <div className="flex items-center gap-2">
           {/* Playback controls */}
@@ -91,7 +101,7 @@ export default function TimelinePanel({ steps, activeStep = 0, onStepChange }: T
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08, duration: 0.4 }}
-              className={`text-left p-4 rounded-ds-lg border transition-all duration-300 ${
+              className={`text-start p-4 rounded-ds-lg border transition-all duration-300 ${
                 i === currentStep
                   ? 'border-ds-accent/40 bg-ds-accent/5 shadow-ds-glow'
                   : i < currentStep
