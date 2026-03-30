@@ -586,13 +586,13 @@ export default function DemoPage() {
                 <PropagationInsightPanel result={null} lang={lang} />
               )}
               {!hasResults && insightTab === 'brief' && (
-                <ReportPanel report={null} />
+                <ReportPanel report={null} lang={lang} />
               )}
               {hasResults && insightTab === 'propagation' && (
                 <PropagationInsightPanel result={engine.result} lang={lang} />
               )}
               {hasResults && insightTab === 'brief' && (
-                <ReportPanel report={derivedReport} />
+                <ReportPanel report={derivedReport} lang={lang} />
               )}
             </div>
 
