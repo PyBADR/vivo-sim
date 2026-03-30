@@ -28,8 +28,6 @@ import ReportPanel from '@/components/report/ReportPanel'
 import PropagationInsightPanel from '@/components/report/PropagationInsightPanel'
 import ChatPanel from '@/components/chat/ChatPanel'
 import {
-  mockGraphNodes,
-  mockGraphEdges,
   mockSimulationSteps,
   mockChatMessages,
 } from '@/lib/mock-data'
@@ -128,6 +126,69 @@ export default function DemoPage() {
       ],
     }
   }, [engine.result, lang])
+
+  // ── Transform propagation result into React Flow graph ──
+  const { graphNodes, graphEdges } = useMemo(() => {
+    if (!engine.result) return { graphNodes: [], graphEdges: [] }
+    const affected = engine.result.propagationResult.affectedNodes
+    if (!affected.length) return { graphNodes: [], graphEdges: [] }
+
+    // Layout: radial rings based on depth
+    const depthGroups = new Map<number, typeof affected>()
+    for (const n of affected) {
+      const group = depthGroups.get(n.depth) || []
+      group.push(n)
+      depthGroups.set(n.depth, group)
+    }
+
+    const centerX = 500
+    const centerY = 400
+    const ringSpacing = 160
+
+    const nodes = affected.map((n) => {
+      const ring = n.depth
+      const nodesAtDepth = depthGroups.get(ring) || []
+      const idx = nodesAtDepth.indexOf(n)
+      const count = nodesAtDepth.length
+      const angle = (2 * Math.PI * idx) / Math.max(count, 1) - Math.PI / 2
+      const radius = ring * ringSpacing + (ring === 0 ? 0 : 80)
+
+      return {
+        id: n.nodeId,
+        position: {
+          x: centerX + Math.cos(angle) * radius,
+          y: centerY + Math.sin(angle) * radius,
+        },
+        data: {
+          label: n.label,
+          type: n.sector,
+          weight: n.impactScore,
+        },
+        type: 'custom' as const,
+      }
+    })
+
+    // Build edges from propagation paths
+    const edgeSet = new Set<string>()
+    const edges: Array<{ id: string; source: string; target: string; label?: string; animated?: boolean }> = []
+    for (const n of affected) {
+      const path = n.propagationPath
+      for (let i = 0; i < path.length - 1; i++) {
+        const key = `${path[i]}→${path[i + 1]}`
+        if (!edgeSet.has(key)) {
+          edgeSet.add(key)
+          edges.push({
+            id: `e-${path[i]}-${path[i + 1]}`,
+            source: path[i],
+            target: path[i + 1],
+            animated: true,
+          })
+        }
+      }
+    }
+
+    return { graphNodes: nodes, graphEdges: edges }
+  }, [engine.result])
 
   // ── Mobile detection ──
   useEffect(() => {
@@ -442,7 +503,7 @@ export default function DemoPage() {
               </div>
             )}
             {hasResults && (
-              <GraphPanel initialNodes={mockGraphNodes} initialEdges={mockGraphEdges} />
+              <GraphPanel initialNodes={graphNodes} initialEdges={graphEdges} />
             )}
           </div>
 

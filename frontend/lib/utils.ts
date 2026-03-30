@@ -34,6 +34,19 @@ export function getNodeColor(type: string): string {
     Person: '#EF5454',
     Platform: '#A78BFA',
     Event: '#F97316',
+    // Sector-based colors (for real propagation graph)
+    energy: '#F59E0B',
+    aviation: '#3B82F6',
+    insurance: '#8B5CF6',
+    banking: '#10B981',
+    logistics: '#F97316',
+    exchange: '#6366F1',
+    tourism: '#EC4899',
+    utilities: '#EAB308',
+    food_supply: '#84CC16',
+    regulatory: '#EF4444',
+    telecom: '#06B6D4',
+    sovereign: '#14B8A6',
   }
   return colors[type] || '#5B7BF8'
 }
